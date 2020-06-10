@@ -7,23 +7,34 @@ from datetime import datetime
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
 
+
 def get_page(query):
     path, qs = query.split("?") if '?' in query else [query, ""]
-    if path.startswith("/hello"):
-        name = get_name(qs)
-        year = get_year(qs)
-        return f"""
+    path = path.rstrip('/')
+
+    switcher = {
+        "/hello": get_page_hello(qs),
+        "/goodbye": get_page_goodbye()
+    }
+
+    return switcher.get(path, "Unknown page")
+
+
+def get_page_hello(qs):
+    name = get_name(qs)
+    year = get_year(qs)
+    return f"""
                     Hey {name}! 
                     You were born in {year}.
-                    Your path: {query}.
                 """
-    elif path.startswith("/goodbye"):
-        return f"""
+
+
+def get_page_goodbye():
+    return f"""
                     {say_bye(datetime.today().hour)}
                     Time: {datetime.today()}
                  """
-    else:
-        return "Unknown page"
+
 
 def get_name(qs):
     if qs == "":
@@ -34,6 +45,7 @@ def get_name(qs):
             return "Dude"
         else:
             return qs["name"][0]
+
 
 def get_year(qs):
     if qs == "":
@@ -47,40 +59,24 @@ def get_year(qs):
             age = int(qs["age"][0])
             return str(today - age)
 
-def say_bye(hour):
-    switcher = {
-        0: "Good Night!",
-        1: "Good Night!",
-        2: "Good Night!",
-        3: "Good Night!",
-        4: "Good Night!",
-        5: "Good Night!",
-        6: "Good Morning!",
-        7: "Good Morning!",
-        8: "Good Morning!",
-        9: "Good Morning!",
-        10: "Good Morning!",
-        11: "Good Morning!",
-        12: "Good Morning!",
-        13: "Good Day!",
-        14: "Good Day!",
-        15: "Good Day!",
-        16: "Good Day!",
-        17: "Good Evening!",
-        18: "Good Evening!",
-        19: "Good Evening!",
-        20: "Good Evening!",
-        21: "Good Night!",
-        22: "Good Night!",
-        23: "Good Night!",
-        24: "Good Night!"
-    }
 
-    return switcher.get(hour, "Invalid time")
+def say_bye(hour):
+    if hour < 6:
+        return "Goodnight!"
+    elif hour < 12:
+        return "Good Morning!"
+    elif hour < 18:
+        return "Have a nice day!"
+    elif hour < 23:
+        return "Good Evening!"
+    else:
+        return "Goodnight!"
+
 
 class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path != "":
+
             msg = get_page(self.path)
 
             self.send_response(200)
@@ -89,10 +85,11 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write(msg.encode())
+
         else:
             return SimpleHTTPRequestHandler.do_GET(self)
 
 with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-# httpd = socketserver.TCPServer(("", PORT), MyHandler)
+    # httpd = socketserver.TCPServer(("", PORT), MyHandler)
     print("it works")
     httpd.serve_forever()
