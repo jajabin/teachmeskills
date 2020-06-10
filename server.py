@@ -7,7 +7,6 @@ from datetime import datetime
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
 
-
 def get_page(query):
     path, qs = query.split("?") if '?' in query else [query, ""]
     path = path.rstrip('/')
