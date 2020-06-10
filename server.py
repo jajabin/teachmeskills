@@ -7,19 +7,21 @@ from datetime import datetime
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
 
+
 def get_page(query):
     path, qs = query.split("?") if '?' in query else [query, ""]
     path = path.rstrip('/')
 
     switcher = {
-        "/hello": get_page_hello(qs),
-        "/goodbye": get_page_goodbye()
+        "/hello": get_page_hello,
+        "/goodbye": get_page_goodbye,
     }
 
-    return switcher.get(path, "Unknown page")
+    return switcher[path](qs) if path in switcher else "Unknown page!"
 
 
 def get_page_hello(qs):
+    qs = parse_qs(qs) if qs != "" else ""   # return dict
     name = get_name(qs)
     year = get_year(qs)
     return f"""
@@ -28,7 +30,7 @@ def get_page_hello(qs):
                 """
 
 
-def get_page_goodbye():
+def get_page_goodbye(qs):
     return f"""
                     {say_bye(datetime.today().hour)}
                     Time: {datetime.today()}
@@ -36,27 +38,19 @@ def get_page_goodbye():
 
 
 def get_name(qs):
-    if qs == "":
-        return "Dude"
+    if "name" in qs:
+        return qs["name"][0]
     else:
-        qs = parse_qs(qs)  # return dict
-        if "name" not in qs:
-            return "Dude"
-        else:
-            return qs["name"][0]
+        return "Dude"
 
 
 def get_year(qs):
-    if qs == "":
-        return "Unknown"
+    if "age" in qs:
+        today = datetime.today().year
+        age = int(qs["age"][0])
+        return str(today - age)
     else:
-        qs = parse_qs(qs)  # return dict
-        if "age" not in qs:
-            return "Unknown"
-        else:
-            today = datetime.today().year
-            age = int(qs["age"][0])
-            return str(today - age)
+        return "Unknown"
 
 
 def say_bye(hour):
@@ -87,6 +81,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         else:
             return SimpleHTTPRequestHandler.do_GET(self)
+
 
 with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
     # httpd = socketserver.TCPServer(("", PORT), MyHandler)
