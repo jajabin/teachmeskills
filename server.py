@@ -17,6 +17,16 @@ def get_page(query):
         "/goodbye": get_page_goodbye,
     }
 
+    # get a page via dict.get (usable in do_GET)
+    # if switcher doesn't contain path, return SimpleHTTPRequestHandler function
+    # because of it's needed to add a check for path not in switcher
+
+    # if path not in switcher:
+    #     return SimpleHTTPRequestHandler.do_GET(self)
+    # default_handler = super().do_GET
+    # handler = switcher.get(path, default_handler)
+    # handler()
+
     return switcher[path](qs) if path in switcher else "Unknown page!"
 
 
@@ -54,7 +64,9 @@ def get_year(qs):
 
 
 def say_bye(hour):
-    if hour < 6:
+    if hour < 0:
+        return "Invalid value."
+    elif hour < 6 or hour == 23:
         return "Goodnight!"
     elif hour < 12:
         return "Good Morning!"
@@ -63,12 +75,13 @@ def say_bye(hour):
     elif hour < 23:
         return "Good Evening!"
     else:
-        return "Goodnight!"
+        return "Invalid value."
 
 
 class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path != "":
+        if self.path != "/":
+            print(self.path)
 
             msg = get_page(self.path)
 
@@ -83,7 +96,8 @@ class MyHandler(SimpleHTTPRequestHandler):
             return SimpleHTTPRequestHandler.do_GET(self)
 
 
-with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-    # httpd = socketserver.TCPServer(("", PORT), MyHandler)
-    print("it works")
-    httpd.serve_forever()
+if __name__ == '__main__':
+    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+        # httpd = socketserver.TCPServer(("", PORT), MyHandler)
+        print("it works")
+        httpd.serve_forever()
