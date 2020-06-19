@@ -1,6 +1,5 @@
 import unittest
-import server
-from datetime import datetime
+from src import server
 
 
 class GetYearTest(unittest.TestCase):

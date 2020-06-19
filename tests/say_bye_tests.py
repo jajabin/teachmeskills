@@ -1,5 +1,5 @@
 import unittest
-import server
+from src import server
 
 
 class SayByeTest(unittest.TestCase):

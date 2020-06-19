@@ -2,19 +2,27 @@ import socketserver
 import os
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
+import codecs
 from datetime import datetime
 
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
 
 
-def get_page(query):
-    path, qs = query.split("?") if '?' in query else [query, ""]
-    path = path.rstrip('/')
+def get_page(self):
+    path, qs = self.path.split("?") if '?' in self.path else [self.path, ""]
 
+    if path.endswith(".css"):
+        return get_cv_style()
+
+    path = path.rstrip('/')
     switcher = {
         "/hello": get_page_hello,
         "/goodbye": get_page_goodbye,
+        "/cv": get_page_cv,
+        "/cv/job": get_page_cv_job,
+        "/cv/education": get_page_cv_education,
+        "/cv/skills": get_page_cv_skills,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -27,40 +35,34 @@ def get_page(query):
     # handler = switcher.get(path, default_handler)
     # handler()
 
-    return switcher[path](qs) if path in switcher else "Unknown page!"
+    return switcher[path](qs) if path in switcher else SimpleHTTPRequestHandler.do_GET(self)
 
 
 def get_page_hello(qs):
-    qs = parse_qs(qs) if qs != "" else ""   # return dict
+    if qs != "":
+        qs = parse_qs(qs)  # return dict
     name = get_name(qs)
     year = get_year(qs)
     return f"""
-                    Hey {name}! 
-                    You were born in {year}.
+                    <p>Hey {name}!</p>
+                    <p>You were born in {year}.</p>
                 """
 
 
 def get_page_goodbye(qs):
     return f"""
-                    {say_bye(datetime.today().hour)}
-                    Time: {datetime.today()}
+                    <p>{say_bye(datetime.today().hour)}</p>
+                    <p>Time: {datetime.today()}</p>
                  """
 
 
 def get_name(qs):
-    if "name" in qs:
-        return qs["name"][0]
-    else:
-        return "Dude"
+        return qs["name"][0] if "name" in qs else "Dude"
 
 
 def get_year(qs):
-    if "age" in qs:
-        today = datetime.today().year
-        age = int(qs["age"][0])
-        return str(today - age)
-    else:
-        return "Unknown"
+    today = datetime.today().year
+    return str(today - int(qs["age"][0])) if "age" in qs else "-"
 
 
 def say_bye(hour):
@@ -78,19 +80,41 @@ def say_bye(hour):
         return "Invalid value."
 
 
+def get_cv_style():
+    return codecs.open("pages/cv_style.css", "r", "utf-8").read()
+
+
+def get_page_cv(qs):
+    return codecs.open("pages/cv_common.html", "r", "utf-8").read()
+
+
+def get_page_cv_education(qs):
+    return codecs.open("pages/cv_education.html", "r", 'utf-8').read()
+
+
+def get_page_cv_job(qs):
+    return codecs.open("pages/cv_job.html", "r", 'utf-8').read()
+
+
+def get_page_cv_skills(qs):
+    return codecs.open("pages/cv_skills.html", "r", 'utf-8').read()
+
+
 class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path != "/":
-            print(self.path)
-
-            msg = get_page(self.path)
+            msg = get_page(self)
+            msg = msg.encode()
 
             self.send_response(200)
-            self.send_header("Content-type", "text/plain")
+            if self.path.endswith(".css"):
+                self.send_header("Content-type", "text/css")
+            else:
+                self.send_header("Content-type", "text/html")
             self.send_header("Content-length", len(msg))
             self.end_headers()
 
-            self.wfile.write(msg.encode())
+            self.wfile.write(msg)
 
         else:
             return SimpleHTTPRequestHandler.do_GET(self)
