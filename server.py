@@ -8,22 +8,12 @@ PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
 
 
-def get_page(query):
-    path, qs = query.split("?") if '?' in query else [query, ""]
-    path = path.rstrip('/')
-
-    switcher = {
-        "/hello": get_page_hello,
-        "/goodbye": get_page_goodbye,
-    }
-
-    return switcher[path](qs) if path in switcher else "Unknown page!"
-
-
 def get_page_hello(qs):
-    qs = parse_qs(qs) if qs != "" else ""   # return dict
-    name = get_name(qs)
-    year = get_year(qs)
+    if qs != "": 
+        qs = parse_qs(qs)   # return dict
+
+    name = get_user_name(qs)
+    year = get_user_bday_year(qs)
     return f"""
                     Hey {name}! 
                     You were born in {year}.
@@ -37,14 +27,14 @@ def get_page_goodbye(qs):
                  """
 
 
-def get_name(qs):
+def get_user_name(qs):
     if "name" in qs:
         return qs["name"][0]
     else:
         return "Dude"
 
 
-def get_year(qs):
+def get_user_bday_year(qs):
     if "age" in qs:
         today = datetime.today().year
         age = int(qs["age"][0])
@@ -68,9 +58,17 @@ def say_bye(hour):
 
 class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path != "":
+            
+        path, qs = self.path.split("?") if '?' in self.path else [self.path, ""]
+        path = path.rstrip('/')
 
-            msg = get_page(self.path)
+        switcher = {
+            "/hello": get_page_hello,
+            "/goodbye": get_page_goodbye,
+        }
+
+        if path in switcher:
+            msg = switcher[path](qs) 
 
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
