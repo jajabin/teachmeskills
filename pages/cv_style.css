@@ -27,10 +27,13 @@ h3 {
    }
    
 p {
-    text-align: center;
 	margin-left: 30px;
 	margin-top: 5px;
 	margin-bottom: 5px;
+}
+
+.center {
+    text-align: center;
 }
 
 b {
