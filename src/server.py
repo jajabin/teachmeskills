@@ -43,7 +43,9 @@ def do(self, method: str) -> None:
         "/cv/job": get_page_cv_job,
         "/cv/education": get_page_cv_education,
         "/cv/skills": get_page_cv_skills,
+        "/cv/projects": get_page_cv_projects,
         "/statistics": get_page_statistics,
+        "/cv/projects/editing": get_page_editing,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -107,21 +109,21 @@ def increment_page_visit(self, endpoint: str) -> None:
     today = str(datetime.today().date())
     statistics_content = read_json_file(self, "visit_counters.json")
 
-    if today not in statistics_content:
-        statistics_content[today] = {}
-    today_statistics = statistics_content[today]
-    if endpoint not in today_statistics:
-        today_statistics[endpoint] = 0
-    today_statistics[endpoint] += 1
+    if endpoint not in statistics_content:
+        statistics_content[endpoint] = {}
+    if today not in statistics_content[endpoint]:
+        statistics_content[endpoint][today] = 0
 
-    statistics_content[today].update(today_statistics)
+    statistics_content[endpoint][today] += 1
     write_json_file(self, "visit_counters.json", statistics_content)
 
 
 def get_user_data(self) -> Dict[str, str]:
     content_length = int(self.headers["Content-Length"])
     data = self.rfile.read(content_length)
+    print(f"data = {data}")
     payload = data.decode()
+    print(payload)
     qs = parse_qs(payload)
     user_data = {}
     for key, values in qs.items():
@@ -156,11 +158,10 @@ def write_json_file(self, path: str, data: Dict) -> None:
 
 def get_page_goodbye(self, _method, endpoint: str, _qs) -> None:
     increment_page_visit(self, endpoint)
-    msg = f"""
-                    {say_bye(datetime.today().hour)}
-                    Time: {datetime.today()}
-                 """
-    respond_200(self, msg, "text/plain")
+    today = datetime.today()
+    phrase = say_bye(today.hour)
+    msg = get_file_contents("pages/goodbye.html").format(date=today, phrase=phrase)  # format ???
+    respond_200(self, msg, "text/html")
 
 
 def get_name(qs) -> str:
@@ -202,7 +203,7 @@ def get_page_cv(self, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv_common.html")
+        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv.html")
     else:
         raise MethodNotAllowed
 
@@ -228,6 +229,7 @@ def get_page_cv_job(self, method, endpoint: str, _qs) -> None:
     else:
         raise MethodNotAllowed
 
+
 def get_page_cv_skills(self, method, endpoint: str, _qs) -> None:
     switcher = {
         "GET": show_page_cv,
@@ -239,53 +241,104 @@ def get_page_cv_skills(self, method, endpoint: str, _qs) -> None:
         raise MethodNotAllowed
 
 
+def get_page_cv_projects(self, method, endpoint, _qs) -> None:
+    if method == "GET":
+        increment_page_visit(self, endpoint)
+        resume_content = read_json_file(self, "contents/cv_resume.json")
+
+        colors = read_json_file(self, "night_mode.json")
+        background_color, text_color = get_colors(colors)
+
+        msg = get_file_contents("pages/header.html").format(bcolor=background_color, tcolor=text_color, **resume_content)
+        msg += get_file_contents("pages/cv_projects.html").format(**resume_content["projects"])
+        msg += get_file_contents("pages/footer.html")
+
+        respond_200(self, msg, "text/html")
+
+    if method == "POST":
+        save_page_cv(self, endpoint, "contents/cv_resume.json", "pages/cv_projects.html")
+
+
 def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
     increment_page_visit(self, endpoint)
     resume_content = read_json_file(self, file_content)
-    backgroud_color, text_color = get_colors(resume_content)
-    msg = get_file_contents(file_html).format(bcolor=backgroud_color, tcolor=text_color, **resume_content)
+
+    colors = read_json_file(self, "night_mode.json")
+    background_color, text_color = get_colors(colors)
+
+    msg = get_file_contents("pages/header.html").format(bcolor=background_color, tcolor=text_color, **resume_content)
+    msg += get_file_contents(file_html).format(**resume_content)
+    msg += get_file_contents("pages/footer.html")
+
     respond_200(self, msg, "text/html")
 
 
-def save_page_cv(self, endpoint: str, file_content: str, file_html: str):
-    resume_content = read_json_file(self, file_content)
-    text_color, background_color = get_colors(resume_content)
-    resume_content["background_color"] = background_color
-    resume_content["text_color"] = text_color
-    write_json_file(self, file_content, resume_content)
+def save_page_cv(self, endpoint: str, _file_content, _file_html):
+    colors = read_json_file(self, "night_mode.json")
+    text_color, background_color = get_colors(colors)
+    colors["background_color"] = background_color
+    colors["text_color"] = text_color
+    write_json_file(self, "night_mode.json", colors)
     respond_302(self, endpoint)
 
 
 def get_page_statistics(self, _method, _endpoint, _qs) -> None:
     statistics_content = read_json_file(self, "visit_counters.json")
-    #stats_period = {"Today": 0, "Yesterday": 1, "Week": 7, "Month": 30}
-    stats_period = {"Today": 0, "Yesterday": 1}
-    tr = "<tr>{0}</tr>"
-    td = "<td>{0}</td>"
-    stats = ""
+    print(statistics_content)
     today = datetime.today().date()
-    counters_list = []
-    for period, days in stats_period.items():
-        stats = stats + tr.format(''.join([td.format(period)]))
-        for date in statistics_content:
-        #     print("=for ")
-        #     while True:
-        #         print("===while ")
-        #         print(date)
-        #         print(str(today - timedelta(days=days)))
-        #         if date == str(today - timedelta(days=days)):
-        #             print("======if ")
-        #             counters_list = statistics_content[date].values()
-        #         if days == 0:
-        #             print("======if days = 0")
-        #             break
-        #         days -= 1
-            pages = statistics_content[date].keys()
-            counters_list = statistics_content[date].values()
-            stats = stats + tr.format(''.join([td.format(page) for page in pages]))
-            stats = stats + tr.format(''.join([td.format(counter) for counter in counters_list]))
-    msg = get_file_contents("pages/statistics.html").format(stats=stats)
+    day = str(today)
+    stats = {}
+    visit_count = 0
+    for point in statistics_content:
+        stats[point] = {}
+
+        if day in statistics_content[point]:
+            stats[point]["today"] = statistics_content[point].get(day, 0)
+        visit_count = stats[point].get("today", 0)
+
+        day = str(today - timedelta(days=1))
+        if day in statistics_content[point]:
+            stats[point]["yesterday"] = statistics_content[point].get(day, 0)
+        visit_count += stats[point].get("yesterday", 0)
+
+        for i in range(2, 6):
+            day = str(today - timedelta(days=i))
+            if day in statistics_content[point]:
+                visit_count += statistics_content[point].get(day, 0)
+        stats[point]["week"] = visit_count
+
+        for i in range(7, 30):
+            day = str(today - timedelta(days=i))
+            if day in statistics_content[point]:
+                visit_count += statistics_content[point].get(day, 0)
+        stats[point]["month"] = visit_count
+
+        day = str(today)
+        visit_count = 0
+
+    html = "<ul>"
+    for endpoint, visits in stats.items():
+        for data, count in visits.items():
+            html += f"<li>{endpoint}:\n {data} - {count}</li>"
+    html += "</ul>"
+    msg = get_file_contents("pages/statistics.html").format(stats=html)
     respond_200(self, msg, "text/html")
+
+
+def get_page_editing(self, method, endpoint, _qs) -> None:
+    switcher = {
+        "GET": show_page_cv,
+        "POST": modify_project,
+    }
+    if method in switcher:
+        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/editing.html")
+    else:
+        raise MethodNotAllowed
+
+
+def modify_project(self, _endpoint, _file_content, _file_html):
+    project_content = get_user_data(self)
+    print(project_content)
 
 
 def get_file_contents(file_path) -> str:
