@@ -1,7 +1,7 @@
 import socketserver
 import os
 import json
-import cgi
+from http import cookies
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from typing import Union
@@ -67,7 +67,6 @@ def do(self, method: str) -> None:
             switcher[endpoint](self, method, endpoint, qs)
         else:
             # return SimpleHTTPRequestHandler.do_GET(self)
-            print(endpoint)
             raise PageNotFoundError
     except (FileNotFoundError, PageNotFoundError):
         respond_404(self)
@@ -98,11 +97,16 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
 def show_page_hello(self, endpoint: str, content_file: str):
     increment_page_visit(self, endpoint)
     user_data = read_json_file(self, content_file)
+
+    #content_cookies = cookies.SimpleCookie(self.headers.get("Set-Cookie"))
+    #print(content_cookies)
+
     name = user_data["name"] if "name" in user_data else "Dude"
     today = datetime.today().year
     year = today - int(user_data["age"]) if "age" in user_data else "-"
+
     msg = get_file_contents("pages/hello.html").format(name=name, year=year) #format ???
-    respond_200(self, msg, "text/html")
+    respond_200(self, msg, "text/html", content_file)
 
 
 def save_user_data(self, _endpoint, content_file: str):
@@ -128,7 +132,6 @@ def get_user_data(self) -> Dict[str, str]:
     content_length = int(self.headers["Content-Length"])
     data = self.rfile.read(content_length)
     payload = data.decode()
-    print(payload)
     qs = parse_qs(payload)
     user_data = {}
     for key, values in qs.items():
@@ -271,7 +274,7 @@ def show_page_projects(self, endpoint: str, file_content: str, file_html: str):
 
     projects = ""
     for project in page_content:
-        projects += "<h3>" + page_content[project]["project_name"]+ "</h3>"
+        projects += "<h3>" + page_content[project]["project_name"] + f" (id: {project})" + "</h3>"
         projects += "<p>" + page_content[project]["project_date"] + "</p>"
         projects += "<p>" + page_content[project]["project_description"] + "</p>"
 
@@ -313,7 +316,7 @@ def save_page_cv(self, endpoint: str, _file_content, _file_html):
 
 def get_page_statistics(self, _method, _endpoint, _qs) -> None:
     statistics_content = read_json_file(self, "visit_counters.json")
-    print(statistics_content)
+
     today = datetime.today().date()
     day = str(today)
     stats = {}
@@ -430,8 +433,8 @@ def get_file_contents(file_path) -> str:
     return content
 
 
-def respond_200(self, msg: str, content_type="text/plain") -> None:
-    send_response(self, 200, msg, content_type)
+def respond_200(self, msg: str, content_type="text/plain", cookies_content="") -> None:
+    send_response(self, 200, msg, content_type, cookies_content)
 
 
 def respond_404(self) -> None:
@@ -453,15 +456,22 @@ def respond_302(self, redirect_to: str) -> None:
     send_response(self, 302, "", "text/plain", redirect_to)
 
 
-def send_response(self, code: int, msg: str, content_type: str, redirect_to="") -> None:
+def send_response(self, code: int, msg: str, content_type: str, redirect_to="", cookies_content="") -> None:
     msg = msg.encode()
 
     self.send_response(code)
     self.send_header("Content-type", content_type)
+
     if redirect_to != "":
         self.send_header("Location", redirect_to)
+
     self.send_header("Content-length", len(msg))
     self.send_header("Content-length", len(msg))
+
+    for cookie in cookies_content:
+        self.send_header("Set-Cookie", cookies.BaseCookie(cookies_content))
+        self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
+
     self.end_headers()
 
     self.wfile.write(msg)
