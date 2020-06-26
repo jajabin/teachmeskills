@@ -25,6 +25,10 @@ class UnknownPath(Exception):
     pass
 
 
+class MissingData(Exception):
+    pass
+
+
 def do(self, method: str) -> None:
     endpoint, qs = self.path.split("?") if '?' in self.path else [self.path, ""]
 
@@ -69,6 +73,8 @@ def do(self, method: str) -> None:
         respond_404(self)
     except MethodNotAllowed:
         respond_405(self)
+    except MissingData:
+        respond_418(self)
 
 
 def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
@@ -77,7 +83,7 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
         "POST": save_user_data,
     }
     if method in switcher:
-        switcher[method](self, endpoint)
+        switcher[method](self, endpoint, "sessions.json")
     else:
         raise MethodNotAllowed
 
@@ -89,9 +95,9 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
     # respond_200(self, msg, "text/html")
 
 
-def show_page_hello(self, endpoint: str):
+def show_page_hello(self, endpoint: str, content_file: str):
     increment_page_visit(self, endpoint)
-    user_data = read_json_file(self, "sessions.json")
+    user_data = read_json_file(self, content_file)
     name = user_data["name"] if "name" in user_data else "Dude"
     today = datetime.today().year
     year = today - int(user_data["age"]) if "age" in user_data else "-"
@@ -99,9 +105,9 @@ def show_page_hello(self, endpoint: str):
     respond_200(self, msg, "text/html")
 
 
-def save_user_data(self, _endpoint):
+def save_user_data(self, _endpoint, content_file: str):
     user_data = get_user_data(self)
-    update_user_sessions(self, user_data)
+    update_json_file(self, user_data, content_file)
     respond_302(self, "/hello")
 
 
@@ -121,7 +127,6 @@ def increment_page_visit(self, endpoint: str) -> None:
 def get_user_data(self) -> Dict[str, str]:
     content_length = int(self.headers["Content-Length"])
     data = self.rfile.read(content_length)
-    print(f"data = {data}")
     payload = data.decode()
     print(payload)
     qs = parse_qs(payload)
@@ -134,10 +139,10 @@ def get_user_data(self) -> Dict[str, str]:
     return user_data
 
 
-def update_user_sessions(self, user_data):
-    sessions = read_json_file(self, "sessions.json")
-    sessions.update(user_data)  # what does update ???
-    write_json_file(self, "sessions.json", sessions)
+def update_json_file(self, user_data, content_file: str):
+    content = read_json_file(self, content_file)
+    content.update(user_data)  # what does update ???
+    write_json_file(self, content_file, content)
 
 
 def read_json_file(self, path: str) -> Dict:
@@ -146,7 +151,6 @@ def read_json_file(self, path: str) -> Dict:
         with file_path.open("r", encoding="utf-8") as usf:
             return json.load(usf)   #what does load?
     except (json.JSONDecodeError, FileNotFoundError):
-        print("-> load_user_sessions: exception")
         return {}   #return error!!!
 
 
@@ -203,7 +207,7 @@ def get_page_cv(self, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv.html")
+        switcher[method](self, endpoint, None, "pages/cv.html")
     else:
         raise MethodNotAllowed
 
@@ -214,7 +218,7 @@ def get_page_cv_education(self, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv_education.html")
+        switcher[method](self, endpoint, "contents/cv_education.json", "pages/cv_education.html")
     else:
         raise MethodNotAllowed
 
@@ -225,7 +229,7 @@ def get_page_cv_job(self, method, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv_job.html")
+        switcher[method](self, endpoint, "contents/cv_job.json", "pages/cv_job.html")
     else:
         raise MethodNotAllowed
 
@@ -236,38 +240,63 @@ def get_page_cv_skills(self, method, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/cv_skills.html")
+        switcher[method](self, endpoint, "contents/cv_skills.json", "pages/cv_skills.html")
     else:
         raise MethodNotAllowed
 
 
 def get_page_cv_projects(self, method, endpoint, _qs) -> None:
-    if method == "GET":
-        increment_page_visit(self, endpoint)
-        resume_content = read_json_file(self, "contents/cv_resume.json")
-
-        colors = read_json_file(self, "night_mode.json")
-        background_color, text_color = get_colors(colors)
-
-        msg = get_file_contents("pages/header.html").format(bcolor=background_color, tcolor=text_color, **resume_content)
-        msg += get_file_contents("pages/cv_projects.html").format(**resume_content["projects"])
-        msg += get_file_contents("pages/footer.html")
-
-        respond_200(self, msg, "text/html")
-
-    if method == "POST":
-        save_page_cv(self, endpoint, "contents/cv_resume.json", "pages/cv_projects.html")
+    switcher = {
+        "GET": show_page_projects,
+        "POST": save_page_cv,
+    }
+    if method in switcher:
+        switcher[method](self, endpoint, "contents/cv_projects.json", "pages/cv_projects.html")
+    else:
+        raise MethodNotAllowed
 
 
-def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
+def show_page_projects(self, endpoint: str, file_content: str, file_html: str):
     increment_page_visit(self, endpoint)
-    resume_content = read_json_file(self, file_content)
+
+    resume_content = read_json_file(self, "contents/cv_resume.json")
+    page_content = {}
+    if file_content is not None:
+        page_content = read_json_file(self, file_content)
 
     colors = read_json_file(self, "night_mode.json")
     background_color, text_color = get_colors(colors)
 
-    msg = get_file_contents("pages/header.html").format(bcolor=background_color, tcolor=text_color, **resume_content)
-    msg += get_file_contents(file_html).format(**resume_content)
+    cv_links = get_file_contents("pages/cv_links.html")
+
+    projects = ""
+    for project in page_content:
+        projects += "<h3>" + page_content[project]["project_name"]+ "</h3>"
+        projects += "<p>" + page_content[project]["project_date"] + "</p>"
+        projects += "<p>" + page_content[project]["project_description"] + "</p>"
+
+    msg = get_file_contents("pages/header.html")
+    msg += get_file_contents(file_html).format(bcolor=background_color, tcolor=text_color, cv_links=cv_links, **resume_content, projects=projects)
+    msg += get_file_contents("pages/footer.html")
+
+    respond_200(self, msg, "text/html")
+
+
+def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
+    increment_page_visit(self, endpoint)
+
+    resume_content = read_json_file(self, "contents/cv_resume.json")
+    page_content = {}
+    if file_content is not None:
+        page_content = read_json_file(self, file_content)
+
+    colors = read_json_file(self, "night_mode.json")
+    background_color, text_color = get_colors(colors)
+
+    cv_links = get_file_contents("pages/cv_links.html")
+
+    msg = get_file_contents("pages/header.html")
+    msg += get_file_contents(file_html).format(bcolor=background_color, tcolor=text_color, cv_links=cv_links, **resume_content, **page_content)
     msg += get_file_contents("pages/footer.html")
 
     respond_200(self, msg, "text/html")
@@ -331,14 +360,65 @@ def get_page_editing(self, method, endpoint, _qs) -> None:
         "POST": modify_project,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_resume.json", "pages/editing.html")
+        switcher[method](self, endpoint, "contents/cv_projects.json", "pages/cv_projects_editing.html")
     else:
         raise MethodNotAllowed
 
 
-def modify_project(self, _endpoint, _file_content, _file_html):
-    project_content = get_user_data(self)
-    print(project_content)
+# edit a project
+def modify_project(self, endpoint, file_content, _file_html):
+    new_project_content = get_user_data(self)
+    projects_content = read_json_file(self, file_content)
+
+    if "project_id" not in new_project_content:
+        raise MissingData
+    if new_project_content["project_id"] not in projects_content:
+        raise MissingData
+
+    for item in new_project_content:
+        if item != "project_id":
+            projects_content[new_project_content["project_id"]][item] = new_project_content[item]
+
+    write_json_file(self, file_content, projects_content)
+    respond_302(self, endpoint)
+
+
+# add a new project
+# def modify_project(self, endpoint, file_content, _file_html):
+#     new_project_content = get_user_data(self)
+#     projects_content = read_json_file(self, file_content)
+#     new_project = {}
+#
+#     if "project_id" not in new_project_content:
+#         raise MissingData
+#     if new_project_content["project_id"] is projects_content:
+#         raise MissingData
+#     id_new_project = new_project_content["project_id"]
+#     new_project[id_new_project] = {"project_name": "", "project_date": "", "project_description": ""}
+#
+#     for item in new_project_content:
+#         if item in new_project[id_new_project]:
+#             new_project[id_new_project][item] = new_project_content[item] #dict.setdefault(key, default_value)
+#
+#     projects_content.update(new_project)
+#     write_json_file(self, file_content, projects_content)
+#     respond_302(self, endpoint)
+
+
+# remove a project
+# def modify_project(self, endpoint, file_content, _file_html):
+#     new_project_content = get_user_data(self)
+#     projects_content = read_json_file(self, file_content)
+#
+#     if "project_id" not in new_project_content:
+#         raise MissingData
+#     if new_project_content["project_id"] not in projects_content:
+#         raise MissingData
+#
+#     projects_content.pop(new_project_content["project_id"])
+#
+#     write_json_file(self, file_content, projects_content)
+#     respond_302(self, endpoint)
 
 
 def get_file_contents(file_path) -> str:
@@ -362,6 +442,11 @@ def respond_404(self) -> None:
 def respond_405(self) -> None:
     msg = "Error 405: Method not allowed"
     send_response(self, 405, msg, "text/plain")
+
+
+def respond_418(self) -> None:
+    msg = "Enter the correct ID Project"
+    send_response(self, 418, msg, "text/plain")
 
 
 def respond_302(self, redirect_to: str) -> None:

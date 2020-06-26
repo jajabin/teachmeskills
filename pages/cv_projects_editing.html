@@ -1,0 +1,39 @@
+<body style="background-color:{bcolor:};color:{tcolor:};">
+<div>
+    <h1>{name:}</h1>
+    <h2>{position:}</h2>
+    <p class="center">{about:}</p>
+</div>
+<div>
+    {cv_links:}
+</div>
+<form method="post">
+    <p>
+        <label for="project_id">ID проекта:</label>
+        <input id="project_id" name="project_id"></input>
+    </p>
+    <p>
+        <label for="project_name">Название проекта:</label>
+        <input id="project_name" name="project_name"></input>
+    </p>
+    <p>
+        <label for="project_date">Дата:</label>
+        <input id="project_date" name="project_date"></input>
+    </p>
+    <p>
+        <label for="project_description">Описание:</label>
+        <input id="project_description" name="project_description"></input>
+    </p>
+    <button type="submit" name="add">Add</button>
+<!--    <form action="/cv/projects/editing">-->
+<!--        <button type="submit" name="add">Add</button>-->
+<!--    </form>-->
+<!--    <form action="/cv/projects/editing">-->
+<!--        <button type="submit" name="edit">Edit</button>-->
+<!--    </form>-->
+<!--    <form action="/cv/projects/editing">-->
+<!--        <button type="submit" name="remove">Remove</button>-->
+<!--    </form>-->
+</form>
+</body>
+</html>
