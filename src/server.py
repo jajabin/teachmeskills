@@ -2,8 +2,6 @@ import socketserver
 import os
 import json
 from http import cookies
-import requests
-import cgi
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from typing import Union
