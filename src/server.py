@@ -8,7 +8,6 @@ from typing import Union
 from typing import Dict
 from datetime import datetime, timedelta
 from pathlib import Path
-from ast import literal_eval
 
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
@@ -50,7 +49,9 @@ def do(self, method: str) -> None:
         "/cv/skills": get_page_cv_skills,
         "/cv/projects": get_page_cv_projects,
         "/statistics": get_page_statistics,
+        "/cv/projects/additing": get_page_editing,
         "/cv/projects/editing": get_page_editing,
+        "/cv/projects/removing": get_page_editing,
         "/cookie": get_page_cookie,
     }
 
@@ -97,7 +98,7 @@ def set_cookies(self, cookies_content: dict):
     return cookie_master
 
 
-def get_page_cookie(self, method, endpoint, qs):
+def get_page_cookie(self, _method, _endpoint, _qs):
     name = "Dude"
     age = "-"
 
@@ -319,6 +320,7 @@ def show_page_projects(self, endpoint: str, file_content: str, file_html: str):
     if file_content is not None:
         page_content = read_json_file(self, file_content)
 
+    print(page_content)
     colors = read_json_file(self, "night_mode.json")
     background_color, text_color = get_colors(colors)
 
@@ -420,8 +422,21 @@ def get_page_editing(self, method, endpoint, _qs) -> None:
         raise MethodNotAllowed
 
 
+def modify_project(self, endpoint, file_content, _file_html) -> None:
+    switcher = {
+        "/cv/projects/additing": add_project,
+        "/cv/projects/editing": edit_project,
+        "/cv/projects/removing": remove_project,
+    }
+    if endpoint in switcher:
+        switcher[endpoint](self, endpoint, "contents/cv_projects.json")
+    else:
+        raise MethodNotAllowed
+
+
+
 # edit a project
-def modify_project(self, endpoint, file_content, _file_html):
+def edit_project(self, endpoint, file_content):
     new_project_content = get_user_data(self)
     projects_content = read_json_file(self, file_content)
 
@@ -439,41 +454,41 @@ def modify_project(self, endpoint, file_content, _file_html):
 
 
 # add a new project
-# def modify_project(self, endpoint, file_content, _file_html):
-#     new_project_content = get_user_data(self)
-#     projects_content = read_json_file(self, file_content)
-#     new_project = {}
-#
-#     if "project_id" not in new_project_content:
-#         raise MissingData
-#     if new_project_content["project_id"] is projects_content:
-#         raise MissingData
-#     id_new_project = new_project_content["project_id"]
-#     new_project[id_new_project] = {"project_name": "", "project_date": "", "project_description": ""}
-#
-#     for item in new_project_content:
-#         if item in new_project[id_new_project]:
-#             new_project[id_new_project][item] = new_project_content[item] #dict.setdefault(key, default_value)
-#
-#     projects_content.update(new_project)
-#     write_json_file(self, file_content, projects_content)
-#     respond_302(self, endpoint)
+def add_project(self, endpoint, file_content):
+    new_project_content = get_user_data(self)
+    projects_content = read_json_file(self, file_content)
+    new_project = {}
+
+    if "project_id" not in new_project_content:
+        raise MissingData
+    if new_project_content["project_id"] is projects_content:
+        raise MissingData
+    id_new_project = new_project_content["project_id"]
+    new_project[id_new_project] = {"project_name": "", "project_date": "", "project_description": ""}
+
+    for item in new_project_content:
+        if item in new_project[id_new_project]:
+            new_project[id_new_project][item] = new_project_content[item] #dict.setdefault(key, default_value)
+
+    projects_content.update(new_project)
+    write_json_file(self, file_content, projects_content)
+    respond_302(self, endpoint)
 
 
 # remove a project
-# def modify_project(self, endpoint, file_content, _file_html):
-#     new_project_content = get_user_data(self)
-#     projects_content = read_json_file(self, file_content)
-#
-#     if "project_id" not in new_project_content:
-#         raise MissingData
-#     if new_project_content["project_id"] not in projects_content:
-#         raise MissingData
-#
-#     projects_content.pop(new_project_content["project_id"])
-#
-#     write_json_file(self, file_content, projects_content)
-#     respond_302(self, endpoint)
+def remove_project(self, endpoint, file_content):
+    new_project_content = get_user_data(self)
+    projects_content = read_json_file(self, file_content)
+
+    if "project_id" not in new_project_content:
+        raise MissingData
+    if new_project_content["project_id"] not in projects_content:
+        raise MissingData
+
+    projects_content.pop(new_project_content["project_id"])
+
+    write_json_file(self, file_content, projects_content)
+    respond_302(self, endpoint)
 
 
 def get_file_contents(file_path) -> str:
@@ -524,7 +539,7 @@ def send_response(self, code: int, msg: str, content_type: str, redirect_to="", 
         for item in cookie_master.values():
             self.send_header("Set-Cookie", item.OutputString())
 
-    self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
+    #self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 
     self.end_headers()
 
