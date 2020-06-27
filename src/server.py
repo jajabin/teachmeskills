@@ -2,12 +2,15 @@ import socketserver
 import os
 import json
 from http import cookies
+import requests
+import cgi
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from typing import Union
 from typing import Dict
 from datetime import datetime, timedelta
 from pathlib import Path
+from ast import literal_eval
 
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
@@ -50,6 +53,7 @@ def do(self, method: str) -> None:
         "/cv/projects": get_page_cv_projects,
         "/statistics": get_page_statistics,
         "/cv/projects/editing": get_page_editing,
+        "/cookie": get_page_cookie,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -76,6 +80,51 @@ def do(self, method: str) -> None:
         respond_418(self)
 
 
+def get_cookies(self) -> Dict[str, str]:
+    cookies_content = self.headers.get('Cookie')
+    if cookies_content == None:
+        return {}
+    cookies_content = cookies_content.replace(" ", "")
+    cookies_content = dict(cookie.split("=") for cookie in cookies_content.split(";"))
+    return cookies_content
+
+
+def set_cookies(self, cookies_content: dict):
+    cookie_master = cookies.SimpleCookie(self.headers.get('Cookie'))
+    expired_date = datetime.now() + timedelta(days=30)
+    for key, value in cookies_content.items():
+        cookie_master[key] = value
+        cookie_master[key]["expires"] = expired_date.strftime("%a, %d-%b-%Y %H:%M:%S PST")
+    print(type(cookie_master))
+    return cookie_master
+
+
+def get_page_cookie(self, method, endpoint, qs):
+    name = "Dude"
+    age = "-"
+
+    cookies_content = get_cookies(self)
+    if cookies_content != "":
+        name = cookies_content["name"]
+        age = str(cookies_content["age"])
+
+    msg = f"Name = {name}, age = {age}"
+
+    msg = msg.encode()
+
+    self.send_response(200)
+    self.send_header("Content-type", "text/plain")
+    self.send_header("Content-length", len(msg))
+
+    cookies_content = {"name": "test6", "age": 23}
+    cookie_master = set_cookies(self, cookies_content)
+    for item in cookie_master.values():
+        self.send_header("Set-Cookie", item.OutputString())
+
+    self.end_headers()
+    self.wfile.write(msg)
+
+
 def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
     switcher = {
         "GET": show_page_hello,
@@ -96,23 +145,28 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
 
 def show_page_hello(self, endpoint: str, content_file: str):
     increment_page_visit(self, endpoint)
-    user_data = read_json_file(self, content_file)
+    #user_data = read_json_file(self, content_file)
 
-    #content_cookies = cookies.SimpleCookie(self.headers.get("Set-Cookie"))
-    #print(content_cookies)
-
-    name = user_data["name"] if "name" in user_data else "Dude"
+    cookies_content = get_cookies(self)
+    name = cookies_content["name"] if "name" in cookies_content else "Dude"
     today = datetime.today().year
-    year = today - int(user_data["age"]) if "age" in user_data else "-"
+    year = today - int(cookies_content["age"]) if "age" in cookies_content else "-"
+
+    # name = user_data["name"] if "name" in user_data else "Dude"
+    # today = datetime.today().year
+    # year = today - int(user_data["age"]) if "age" in user_data else "-"
 
     msg = get_file_contents("pages/hello.html").format(name=name, year=year) #format ???
-    respond_200(self, msg, "text/html", content_file)
+    respond_200(self, msg, "text/html")
 
 
 def save_user_data(self, _endpoint, content_file: str):
     user_data = get_user_data(self)
     update_json_file(self, user_data, content_file)
-    respond_302(self, "/hello")
+
+    cookie_master = set_cookies(self, user_data)
+
+    respond_302(self, "/hello", cookie_master)
 
 
 def increment_page_visit(self, endpoint: str) -> None:
@@ -434,7 +488,7 @@ def get_file_contents(file_path) -> str:
 
 
 def respond_200(self, msg: str, content_type="text/plain", cookies_content="") -> None:
-    send_response(self, 200, msg, content_type, cookies_content)
+    send_response(self, 200, msg, content_type, cookie_master=cookies_content)
 
 
 def respond_404(self) -> None:
@@ -452,11 +506,11 @@ def respond_418(self) -> None:
     send_response(self, 418, msg, "text/plain")
 
 
-def respond_302(self, redirect_to: str) -> None:
-    send_response(self, 302, "", "text/plain", redirect_to)
+def respond_302(self, redirect_to: str, cookies_content="") -> None:
+    send_response(self, 302, "", "text/plain", redirect_to, cookie_master=cookies_content)
 
 
-def send_response(self, code: int, msg: str, content_type: str, redirect_to="", cookies_content="") -> None:
+def send_response(self, code: int, msg: str, content_type: str, redirect_to="", cookie_master="") -> None:
     msg = msg.encode()
 
     self.send_response(code)
@@ -466,11 +520,13 @@ def send_response(self, code: int, msg: str, content_type: str, redirect_to="", 
         self.send_header("Location", redirect_to)
 
     self.send_header("Content-length", len(msg))
-    self.send_header("Content-length", len(msg))
 
-    for cookie in cookies_content:
-        self.send_header("Set-Cookie", cookies.BaseCookie(cookies_content))
-        self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
+    if cookie_master != "":
+        print(cookie_master)
+        for item in cookie_master.values():
+            self.send_header("Set-Cookie", item.OutputString())
+
+    self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 
     self.end_headers()
 
