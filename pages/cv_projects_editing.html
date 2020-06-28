@@ -1,4 +1,7 @@
 <body style="background-color:{background_color:};color:{text_color:};">
+  <form method="post">
+          <button type="submit" class="slider" name="night_mode">Night mode</button>
+  </form>
 <div>
     <h1>{name:}</h1>
     <h2>{position:}</h2>
@@ -24,7 +27,9 @@
         <label for="project_description">Описание:</label>
         <input id="project_description" name="project_description"></input>
     </p>
-    <button type="submit" name="add">Add</button>
+    <button type="submit" name="add" formaction="/cv/projects/editing/add">Add</button>
+    <button type="submit" name="edit" formaction="/cv/projects/editing/edit">Edit</button>
+    <button type="submit" name="delete" formaction="/cv/projects/editing/delete">Delete</button>
 </form>
 </body>
 </html>

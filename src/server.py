@@ -32,9 +32,12 @@ def do(self, method: str) -> None:
         "/cv/skills": get_page_cv_skills,
         "/cv/projects": get_page_cv_projects,
         "/statistics": get_page_statistics,
-        "/cv/projects/additing": get_page_editing,
-        "/cv/projects/editing": get_page_editing,
-        "/cv/projects/removing": get_page_editing,
+        "/cv/projects/additing": get_page_projects_editing,
+        "/cv/projects/editing": get_page_projects_editing,
+        "/cv/projects/removing": get_page_projects_editing,
+        "/cv/projects/editing/add": get_page_projects_editing,
+        "/cv/projects/editing/edit": get_page_projects_editing,
+        "/cv/projects/editing/delete": get_page_projects_editing,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -77,7 +80,6 @@ def show_page_hello(self, endpoint: str, _content_file):
 
     user_session = read_user_session(self)
 
-    #msg = get_file_contents("pages/hello.html").format(bcolor=background_color, tcolor=text_color, name=name, year=year)     #format ???
     msg = get_file_contents("pages/hello.html").format(**user_session)
     respond_200(self, msg, "text/html")
 
@@ -99,10 +101,6 @@ def read_user_session(self) -> Dict[str, str]:
         current_user_session["year"] = "-"
         current_user_session["background_color"] = "white"
         current_user_session["text_color"] = "gray"
-
-    # name = user_data[user_id]["name"] if user_id in user_data else "Dude"
-    # today = datetime.today().year
-    # year = today - int(user_data[user_id]["age"]) if user_id in user_data else "-"
 
     return current_user_session
 
@@ -278,9 +276,6 @@ def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
 
     user_session = read_user_session(self)
 
-    # colors = read_json_file("night_mode.json")
-    # background_color, text_color = get_colors(colors)
-
     cv_links = get_file_contents("pages/cv_links.html")
 
     msg = get_file_contents("pages/header.html")
@@ -291,12 +286,6 @@ def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
 
 
 def save_page_cv(self, endpoint: str, _file_content, _file_html):
-    # colors = read_json_file("night_mode.json")
-    # text_color, background_color = get_colors(colors)
-    # colors["background_color"] = background_color
-    # colors["text_color"] = text_color
-    # write_json_file("night_mode.json", colors)
-
     cookies_content = get_cookies(self)
     user_data = read_json_file("sessions.json")
     try:
@@ -351,7 +340,7 @@ def get_page_statistics(self, _method, _endpoint, _qs) -> None:
     respond_200(self, msg, "text/html")
 
 
-def get_page_editing(self, method, endpoint, _qs) -> None:
+def get_page_projects_editing(self, method, endpoint, _qs) -> None:
     switcher = {
         "GET": show_page_cv,
         "POST": modify_project,
@@ -363,10 +352,11 @@ def get_page_editing(self, method, endpoint, _qs) -> None:
 
 
 def modify_project(self, endpoint, file_content, _file_html) -> None:
+    print("in modify_project: ", endpoint)
     switcher = {
-        "/cv/projects/additing": add_project,
-        "/cv/projects/editing": edit_project,
-        "/cv/projects/removing": remove_project,
+        "/cv/projects/editing/add": add_project,
+        "/cv/projects/editing/edit": edit_project,
+        "/cv/projects/editing/delete": remove_project,
     }
     if endpoint in switcher:
         switcher[endpoint](self, file_content)
@@ -376,6 +366,7 @@ def modify_project(self, endpoint, file_content, _file_html) -> None:
 
 # edit a project
 def edit_project(self, file_content):
+    print("in edit_project")
     new_project_content = parse_user_sessions(self)
     projects_content = read_json_file(file_content)
 
