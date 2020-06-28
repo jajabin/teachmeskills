@@ -134,13 +134,6 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
     else:
         raise MethodNotAllowed
 
-    # if qs != "":
-    #     qs = parse_qs(qs)  # return dict
-    # #name = get_name(qs)
-    # #year = get_year(qs)
-    # msg = get_file_contents("pages/hello.html").format(name='DJANGO', year=76) #format ???
-    # respond_200(self, msg, "text/html")
-
 
 def show_page_hello(self, endpoint: str, content_file: str):
     increment_page_visit(self, endpoint)
@@ -224,15 +217,6 @@ def get_page_goodbye(self, _method, endpoint: str, _qs) -> None:
     respond_200(self, msg, "text/html")
 
 
-def get_name(qs) -> str:
-        return qs["name"][0] if "name" in qs else "Dude"
-
-
-def get_year(qs) -> Union[int, str]:
-    today = datetime.today().year
-    return today - int(qs["age"][0]) if "age" in qs else "-"
-
-
 def say_bye(hour) -> str:
     if hour < 0:
         return "Invalid value."
@@ -303,7 +287,7 @@ def get_page_cv_skills(self, method, endpoint: str, _qs) -> None:
 
 def get_page_cv_projects(self, method, endpoint, _qs) -> None:
     switcher = {
-        "GET": show_page_projects,
+        "GET": show_page_cv_projects,
         "POST": save_page_cv,
     }
     if method in switcher:
@@ -312,25 +296,25 @@ def get_page_cv_projects(self, method, endpoint, _qs) -> None:
         raise MethodNotAllowed
 
 
-def show_page_projects(self, endpoint: str, file_content: str, file_html: str):
+def show_page_cv_projects(self, endpoint: str, file_content: str, file_html: str):
     increment_page_visit(self, endpoint)
 
     resume_content = read_json_file(self, "contents/cv_resume.json")
-    page_content = {}
+    projects_content = {}
     if file_content is not None:
-        page_content = read_json_file(self, file_content)
+        projects_content = read_json_file(self, file_content)
 
-    print(page_content)
+    print(projects_content)
     colors = read_json_file(self, "night_mode.json")
     background_color, text_color = get_colors(colors)
 
     cv_links = get_file_contents("pages/cv_links.html")
 
     projects = ""
-    for project in page_content:
-        projects += "<h3>" + page_content[project]["project_name"] + f" (id: {project})" + "</h3>"
-        projects += "<p>" + page_content[project]["project_date"] + "</p>"
-        projects += "<p>" + page_content[project]["project_description"] + "</p>"
+    for project in projects_content:
+        projects += "<h3>" + projects_content[project]["project_name"] + f" (id: {project})" + "</h3>"
+        projects += "<p>" + projects_content[project]["project_date"] + "</p>"
+        projects += "<p>" + projects_content[project]["project_description"] + "</p>"
 
     msg = get_file_contents("pages/header.html")
     msg += get_file_contents(file_html).format(bcolor=background_color, tcolor=text_color, cv_links=cv_links, **resume_content, projects=projects)
@@ -368,45 +352,41 @@ def save_page_cv(self, endpoint: str, _file_content, _file_html):
     respond_302(self, endpoint)
 
 
+def calculate_stats(page_statistics, start_date, count_days) -> int:
+    visit_counter = 0
+    for day_counter in range(0, count_days + 1):
+        day = str(start_date - timedelta(days=day_counter))
+        if day in page_statistics:
+            visit_counter += page_statistics[day]
+
+    return visit_counter
+
+
 def get_page_statistics(self, _method, _endpoint, _qs) -> None:
     statistics_content = read_json_file(self, "visit_counters.json")
 
     today = datetime.today().date()
-    day = str(today)
     stats = {}
-    visit_count = 0
-    for point in statistics_content:
-        stats[point] = {}
+    for page in statistics_content:
+        stats[page] = {}
+        stats[page]["today"] = calculate_stats(statistics_content[page], today, 0)
+        stats[page]["yesterday"] = calculate_stats(statistics_content[page], today - timedelta(days=1), 0)
+        stats[page]["week"] = calculate_stats(statistics_content[page], today, 7)
+        stats[page]["month"] = calculate_stats(statistics_content[page], today, 30)
 
-        if day in statistics_content[point]:
-            stats[point]["today"] = statistics_content[point].get(day, 0)
-        visit_count = stats[point].get("today", 0)
-
-        day = str(today - timedelta(days=1))
-        if day in statistics_content[point]:
-            stats[point]["yesterday"] = statistics_content[point].get(day, 0)
-        visit_count += stats[point].get("yesterday", 0)
-
-        for i in range(2, 6):
-            day = str(today - timedelta(days=i))
-            if day in statistics_content[point]:
-                visit_count += statistics_content[point].get(day, 0)
-        stats[point]["week"] = visit_count
-
-        for i in range(7, 30):
-            day = str(today - timedelta(days=i))
-            if day in statistics_content[point]:
-                visit_count += statistics_content[point].get(day, 0)
-        stats[point]["month"] = visit_count
-
-        day = str(today)
-        visit_count = 0
-
-    html = "<ul>"
+    html = """<tr>
+            <th>Page</th>
+            <th>Today</th>
+            <th>Yesterday</th> 
+            <th>Week</th>
+            <th>Month</th>
+           </tr>"""
     for endpoint, visits in stats.items():
+        html += f"<tr><td>{endpoint}</td>"
         for data, count in visits.items():
-            html += f"<li>{endpoint}:\n {data} - {count}</li>"
-    html += "</ul>"
+            html += f"<td>{count}</td>"
+    html += "</tr>"
+
     msg = get_file_contents("pages/statistics.html").format(stats=html)
     respond_200(self, msg, "text/html")
 
@@ -429,14 +409,13 @@ def modify_project(self, endpoint, file_content, _file_html) -> None:
         "/cv/projects/removing": remove_project,
     }
     if endpoint in switcher:
-        switcher[endpoint](self, endpoint, "contents/cv_projects.json")
+        switcher[endpoint](self, file_content)
     else:
         raise MethodNotAllowed
 
 
-
 # edit a project
-def edit_project(self, endpoint, file_content):
+def edit_project(self, file_content):
     new_project_content = get_user_data(self)
     projects_content = read_json_file(self, file_content)
 
@@ -450,11 +429,11 @@ def edit_project(self, endpoint, file_content):
             projects_content[new_project_content["project_id"]][item] = new_project_content[item]
 
     write_json_file(self, file_content, projects_content)
-    respond_302(self, endpoint)
+    respond_302(self, "/cv/projects")
 
 
 # add a new project
-def add_project(self, endpoint, file_content):
+def add_project(self, file_content):
     new_project_content = get_user_data(self)
     projects_content = read_json_file(self, file_content)
     new_project = {}
@@ -472,11 +451,11 @@ def add_project(self, endpoint, file_content):
 
     projects_content.update(new_project)
     write_json_file(self, file_content, projects_content)
-    respond_302(self, endpoint)
+    respond_302(self, "/cv/projects")
 
 
 # remove a project
-def remove_project(self, endpoint, file_content):
+def remove_project(self, file_content):
     new_project_content = get_user_data(self)
     projects_content = read_json_file(self, file_content)
 
@@ -488,7 +467,7 @@ def remove_project(self, endpoint, file_content):
     projects_content.pop(new_project_content["project_id"])
 
     write_json_file(self, file_content, projects_content)
-    respond_302(self, endpoint)
+    respond_302(self, "/cv/projects")
 
 
 def get_file_contents(file_path) -> str:

@@ -46,3 +46,13 @@ b {
 ul {
 	margin-left: 30px;
 }
+
+table {
+    align: center;
+    padding: 5%;
+    width: 20%;
+}
+
+td {
+    padding: 10px;
+}
