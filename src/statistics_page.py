@@ -32,12 +32,12 @@ def get_page_statistics(self, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_statistics,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "/goodbye")
+        switcher[method](self, endpoint, "/statistics")
     else:
         raise MethodNotAllowed
 
 
-def show_page_statistics(self, _method, _endpoint, _qs) -> None:
+def show_page_statistics(self, _method, _endpoint) -> None:
     statistics_content = read_json_file("visit_counters.json")
 
     today = datetime.today().date()
@@ -71,7 +71,7 @@ def show_page_statistics(self, _method, _endpoint, _qs) -> None:
 
 def save_page_statistics(self, endpoint: str, redirect_to: str):
     switcher = {
-        "/save_page_statistics/set_night_mode": set_night_mode,
+        "/statistics/set_night_mode": set_night_mode,
     }
     if endpoint in switcher:
         switcher[endpoint](self, redirect_to)
