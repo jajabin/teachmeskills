@@ -18,5 +18,4 @@ def set_cookies(self, cookies_content: dict):
     for key, value in cookies_content.items():
         cookie_master[key] = value
         cookie_master[key]["expires"] = expired_date.strftime("%a, %d-%b-%Y %H:%M:%S PST")
-    print(type(cookie_master))
     return cookie_master

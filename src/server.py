@@ -1,12 +1,13 @@
 import socketserver
 import os
+import uuid
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from typing import Union, Dict
 from src.errors import *
 from src.json_utils import *
 from src.cookies_utils import *
-
+from src.statistics_page import *
 
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
@@ -25,19 +26,26 @@ def do(self, method: str) -> None:
     endpoint = endpoint.rstrip('/')
     switcher = {
         "/hello": get_page_hello,
+        "/hello/set_night_mode": get_page_hello,
         "/goodbye": get_page_goodbye,
+        "/goodbye/set_night_mode": get_page_goodbye,
         "/cv": get_page_cv,
+        "/cv/set_night_mode": get_page_cv,
         "/cv/job": get_page_cv_job,
+        "/cv/job/set_night_mode": get_page_cv_job,
         "/cv/education": get_page_cv_education,
+        "/cv/education/set_night_mode": get_page_cv_education,
         "/cv/skills": get_page_cv_skills,
+        "/cv/skills/set_night_mode": get_page_cv_skills,
         "/cv/projects": get_page_cv_projects,
+        "/cv/projects/set_night_mode": get_page_cv_projects,
         "/statistics": get_page_statistics,
-        "/cv/projects/additing": get_page_projects_editing,
+        "/statistics/set_night_mode": get_page_statistics,
         "/cv/projects/editing": get_page_projects_editing,
-        "/cv/projects/removing": get_page_projects_editing,
         "/cv/projects/editing/add": get_page_projects_editing,
         "/cv/projects/editing/edit": get_page_projects_editing,
         "/cv/projects/editing/delete": get_page_projects_editing,
+        "/cv/projects/editing/set_night_mode": get_page_projects_editing,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -78,63 +86,70 @@ def get_page_hello(self, method: str, endpoint: str, qs: str) -> None:
 def show_page_hello(self, endpoint: str, _content_file):
     increment_page_visit(self, endpoint)
 
-    user_session = read_user_session(self)
+    user_id = get_user_id(self)
+    user_session = read_user_session(self, user_id)
+    cookie_master = set_cookies(self, {"user_id": user_id})
 
-    msg = get_file_contents("pages/hello.html").format(**user_session)
-    respond_200(self, msg, "text/html")
+    msg = get_file_contents("pages/hello.html").format(**user_session[user_id])
+    respond_200(self, msg, "text/html", cookie_master)
 
 
-def read_user_session(self) -> Dict[str, str]:
+def get_user_id(self) -> str:
     cookies_content = get_cookies(self)
+    try:
+        return cookies_content["user_id"]
+    except:
+        return str(uuid.uuid1())
+
+
+def read_user_session(self, user_id: str) -> Dict[str, str]:
     user_data = read_json_file("sessions.json")
 
     current_user_session = {}
-    try:
-        user_id = cookies_content["user_id"]
-        current_user_session["name"] = user_data[user_id]["name"]
+    if user_id in user_data:
+        current_user_session[user_id] = user_data[user_id]
         today = datetime.today().year
-        current_user_session["year"] = today - int(user_data[user_id]["age"])
-        current_user_session["background_color"] = user_data[user_id]["background_color"]
-        current_user_session["text_color"] = user_data[user_id]["text_color"]
-    except KeyError:
-        current_user_session["name"] = "Dude"
-        current_user_session["year"] = "-"
-        current_user_session["background_color"] = "white"
-        current_user_session["text_color"] = "gray"
+        current_user_session[user_id]["year"] = today - int(current_user_session[user_id]["age"]) if \
+        current_user_session[user_id]["age"] != "-" else "-"
+    else:
+        current_user_session[user_id] = create_new_user_session()
+        user_data.update(current_user_session)
+        update_json_file(user_data, "sessions.json")
 
     return current_user_session
+
+
+def create_new_user_session() -> Dict[str, str]:
+    temp_user_data = {}
+    temp_user_data["name"] = "Dude"
+    temp_user_data["age"] = "-"
+    temp_user_data["year"] = "-"
+    temp_user_data["background_color"] = "white"
+    temp_user_data["text_color"] = "gray"
+    return temp_user_data
 
 
 def save_user_data(self, _endpoint, _content_file):
     user_data = read_json_file("sessions.json")
     new_user_data = parse_user_sessions(self)
 
-    new_user_data["background_color"] = "white"
-    new_user_data["text_color"] = "gray"
+    if "name" not in new_user_data:
+        raise MissingData
 
-    user_id = new_user_data["name"]     # now it's name
+    user_id = str(uuid.uuid1())
     if user_id not in user_data:
         user_data[user_id] = {}
 
     user_data[user_id].update(new_user_data)
-    update_json_file(user_data, "sessions.json")
+    today = datetime.today().year
+    user_data[user_id]["year"] = today - int(user_data[user_id]["age"]) if "age" in new_user_data else "-"
+    user_data[user_id]["background_color"] = "white"
+    user_data[user_id]["text_color"] = "gray"
 
+    update_json_file(user_data, "sessions.json")
     cookie_master = set_cookies(self, {"user_id": user_id})
 
     respond_302(self, "/hello", cookie_master)
-
-
-def increment_page_visit(self, endpoint: str) -> None:
-    today = str(datetime.today().date())
-    statistics_content = read_json_file("visit_counters.json")
-
-    if endpoint not in statistics_content:
-        statistics_content[endpoint] = {}
-    if today not in statistics_content[endpoint]:
-        statistics_content[endpoint][today] = 0
-
-    statistics_content[endpoint][today] += 1
-    write_json_file("visit_counters.json", statistics_content)
 
 
 def parse_user_sessions(self) -> Dict[str, str]:
@@ -151,15 +166,37 @@ def parse_user_sessions(self) -> Dict[str, str]:
     return user_data
 
 
-def get_page_goodbye(self, _method, endpoint: str, _qs) -> None:
+def get_page_goodbye(self, method: str, endpoint: str, _qs) -> None:
+    switcher = {
+        "GET": show_page_goodbye,
+        "POST": save_page_goodbye,
+    }
+    if method in switcher:
+        switcher[method](self, endpoint, "/goodbye")
+    else:
+        raise MethodNotAllowed
+
+
+def show_page_goodbye(self, endpoint: str, _redirect_to) -> None:
     increment_page_visit(self, endpoint)
     today = datetime.today()
     phrase = say_bye(today.hour)
 
-    user_session = read_user_session(self)
+    user_id = get_user_id(self)
+    user_session = read_user_session(self, user_id)
 
-    msg = get_file_contents("pages/goodbye.html").format(date=today, phrase=phrase, **user_session)  # format ???
+    msg = get_file_contents("pages/goodbye.html").format(date=today, phrase=phrase, **user_session[user_id])  # format ???
     respond_200(self, msg, "text/html")
+
+
+def save_page_goodbye(self, endpoint: str, redirect_to: str):
+    switcher = {
+        "/goodbye/set_night_mode": set_night_mode,
+    }
+    if endpoint in switcher:
+        switcher[endpoint](self, redirect_to)
+    else:
+        raise MethodNotAllowed
 
 
 def say_bye(hour) -> str:
@@ -182,17 +219,13 @@ def get_cv_style(self, _method) -> None:
     respond_200(self, msg, "text/css")
 
 
-def get_colors(content):
-    return content["background_color"], content["text_color"]
-
-
 def get_page_cv(self, method: str, endpoint: str, _qs) -> None:
     switcher = {
         "GET": show_page_cv,
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, None, "pages/cv.html")
+        switcher[method](self, endpoint, "/cv", None, "pages/cv.html")
     else:
         raise MethodNotAllowed
 
@@ -203,7 +236,7 @@ def get_page_cv_education(self, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_education.json", "pages/cv_education.html")
+        switcher[method](self, endpoint, "/cv/education", "contents/cv_education.json", "pages/cv_education.html")
     else:
         raise MethodNotAllowed
 
@@ -214,7 +247,7 @@ def get_page_cv_job(self, method, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_job.json", "pages/cv_job.html")
+        switcher[method](self, endpoint, "/cv/job", "contents/cv_job.json", "pages/cv_job.html")
     else:
         raise MethodNotAllowed
 
@@ -225,48 +258,23 @@ def get_page_cv_skills(self, method, endpoint: str, _qs) -> None:
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_skills.json", "pages/cv_skills.html")
+        switcher[method](self, endpoint, "/cv/skills", "contents/cv_skills.json", "pages/cv_skills.html")
     else:
         raise MethodNotAllowed
 
 
 def get_page_cv_projects(self, method, endpoint, _qs) -> None:
     switcher = {
-        "GET": show_page_cv_projects,
+        "GET": show_page_cv,
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_projects.json", "pages/cv_projects.html")
+        switcher[method](self, endpoint, "/cv/projects", "contents/cv_projects.json", "pages/cv_projects.html")
     else:
         raise MethodNotAllowed
 
 
-def show_page_cv_projects(self, endpoint: str, file_content: str, file_html: str):
-    increment_page_visit(self, endpoint)
-
-    resume_content = read_json_file("contents/cv_resume.json")
-    projects_content = {}
-    if file_content is not None:
-        projects_content = read_json_file(file_content)
-
-    user_session = read_user_session(self)
-
-    cv_links = get_file_contents("pages/cv_links.html")
-
-    projects = ""
-    for project in projects_content:
-        projects += "<h3>" + projects_content[project]["project_name"] + f" (id: {project})" + "</h3>"
-        projects += "<p>" + projects_content[project]["project_date"] + "</p>"
-        projects += "<p>" + projects_content[project]["project_description"] + "</p>"
-
-    msg = get_file_contents("pages/header.html")
-    msg += get_file_contents(file_html).format(cv_links=cv_links, **resume_content, projects=projects, **user_session)
-    msg += get_file_contents("pages/footer.html")
-
-    respond_200(self, msg, "text/html")
-
-
-def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
+def show_page_cv(self, endpoint: str, _redirect_to, file_content: str, file_html: str):
     increment_page_visit(self, endpoint)
 
     resume_content = read_json_file("contents/cv_resume.json")
@@ -274,70 +282,49 @@ def show_page_cv(self, endpoint: str, file_content: str, file_html: str):
     if file_content is not None:
         page_content = read_json_file(file_content)
 
-    user_session = read_user_session(self)
+    user_id = get_user_id(self)
+    user_session = read_user_session(self, user_id)
 
     cv_links = get_file_contents("pages/cv_links.html")
 
+    projects = ""
+    if endpoint == "/cv/projects":
+        for project in page_content:
+            projects += "<h3>" + page_content[project]["project_name"] + f" (id: {project})" + "</h3>"
+            projects += "<p>" + page_content[project]["project_date"] + "</p>"
+            projects += "<p>" + page_content[project]["project_description"] + "</p>"
+
     msg = get_file_contents("pages/header.html")
-    msg += get_file_contents(file_html).format(cv_links=cv_links, **resume_content, **page_content, **user_session)
+    msg += get_file_contents(file_html) \
+                .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id])
     msg += get_file_contents("pages/footer.html")
 
-    respond_200(self, msg, "text/html")
+    cookie_master = set_cookies(self, {"user_id": user_id})
+    respond_200(self, msg, "text/html", cookie_master)
 
 
-def save_page_cv(self, endpoint: str, _file_content, _file_html):
-    cookies_content = get_cookies(self)
-    user_data = read_json_file("sessions.json")
-    try:
-        user_id = cookies_content["user_id"]
-        user_data[user_id]["background_color"], user_data[user_id]["text_color"] = user_data[user_id]["text_color"], user_data[user_id]["background_color"]
-    except KeyError:
-        user_data[user_id]["background_color"], user_data[user_id]["text_color"] = "white", "gray"
-
-    update_json_file(user_data, "sessions.json")
-
-    respond_302(self, endpoint)
+def set_night_mode(self, endpoint: str, _file_content=""):
+    user_id = get_user_id(self)
+    user_session = read_user_session(self, user_id)
+    user_session[user_id]["background_color"], user_session[user_id]["text_color"] = \
+                                        user_session[user_id]["text_color"], user_session[user_id]["background_color"]
+    update_json_file(user_session, "sessions.json")
+    cookie_master = set_cookies(self, {"user_id": user_id})
+    respond_302(self, endpoint, cookie_master)
 
 
-def calculate_stats(page_statistics, start_date, count_days) -> int:
-    visit_counter = 0
-    for day_counter in range(0, count_days + 1):
-        day = str(start_date - timedelta(days=day_counter))
-        if day in page_statistics:
-            visit_counter += page_statistics[day]
-
-    return visit_counter
-
-
-def get_page_statistics(self, _method, _endpoint, _qs) -> None:
-    statistics_content = read_json_file("visit_counters.json")
-
-    today = datetime.today().date()
-    stats = {}
-    for page in statistics_content:
-        stats[page] = {}
-        stats[page]["today"] = calculate_stats(statistics_content[page], today, 0)
-        stats[page]["yesterday"] = calculate_stats(statistics_content[page], today - timedelta(days=1), 0)
-        stats[page]["week"] = calculate_stats(statistics_content[page], today, 7)
-        stats[page]["month"] = calculate_stats(statistics_content[page], today, 30)
-
-    html = """<tr>
-            <th>Page</th>
-            <th>Today</th>
-            <th>Yesterday</th> 
-            <th>Week</th>
-            <th>Month</th>
-           </tr>"""
-    for endpoint, visits in stats.items():
-        html += f"<tr><td>{endpoint}</td>"
-        for data, count in visits.items():
-            html += f"<td>{count}</td>"
-    html += "</tr>"
-
-    user_session = read_user_session(self)
-
-    msg = get_file_contents("pages/statistics.html").format(stats=html, **user_session)
-    respond_200(self, msg, "text/html")
+def save_page_cv(self, endpoint: str, redirect_to: str, _file_content, _file_html):
+    switcher = {
+        "/cv/set_night_mode": set_night_mode,
+        "/cv/job/set_night_mode": set_night_mode,
+        "/cv/education/set_night_mode": set_night_mode,
+        "/cv/skills/set_night_mode": set_night_mode,
+        "/cv/projects/set_night_mode": set_night_mode,
+    }
+    if endpoint in switcher:
+        switcher[endpoint](self, redirect_to)
+    else:
+        raise MethodNotAllowed
 
 
 def get_page_projects_editing(self, method, endpoint, _qs) -> None:
@@ -346,26 +333,26 @@ def get_page_projects_editing(self, method, endpoint, _qs) -> None:
         "POST": modify_project,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "contents/cv_projects.json", "pages/cv_projects_editing.html")
+        switcher[method](self, endpoint, "/cv/projects/editing", "contents/cv_projects.json", "pages/cv_projects_editing.html")
     else:
         raise MethodNotAllowed
 
 
-def modify_project(self, endpoint, file_content, _file_html) -> None:
-    print("in modify_project: ", endpoint)
+def modify_project(self, endpoint, redirect_to, file_content, _file_html) -> None:
     switcher = {
         "/cv/projects/editing/add": add_project,
         "/cv/projects/editing/edit": edit_project,
         "/cv/projects/editing/delete": remove_project,
+        "/cv/projects/editing/set_night_mode": set_night_mode,
     }
     if endpoint in switcher:
-        switcher[endpoint](self, file_content)
+        switcher[endpoint](self, redirect_to, file_content)
     else:
         raise MethodNotAllowed
 
 
 # edit a project
-def edit_project(self, file_content):
+def edit_project(self, _redirect_to, file_content):
     print("in edit_project")
     new_project_content = parse_user_sessions(self)
     projects_content = read_json_file(file_content)
@@ -384,7 +371,7 @@ def edit_project(self, file_content):
 
 
 # add a new project
-def add_project(self, file_content):
+def add_project(self, _redirect_to, file_content):
     new_project_content = parse_user_sessions(self)
     projects_content = read_json_file(file_content)
     new_project = {}
@@ -398,7 +385,7 @@ def add_project(self, file_content):
 
     for item in new_project_content:
         if item in new_project[id_new_project]:
-            new_project[id_new_project][item] = new_project_content[item] #dict.setdefault(key, default_value)
+            new_project[id_new_project][item] = new_project_content[item]  # dict.setdefault(key, default_value)
 
     projects_content.update(new_project)
     write_json_file(file_content, projects_content)
@@ -406,7 +393,7 @@ def add_project(self, file_content):
 
 
 # remove a project
-def remove_project(self, file_content):
+def remove_project(self, _redirect_to, file_content):
     new_project_content = parse_user_sessions(self)
     projects_content = read_json_file(file_content)
 
@@ -445,7 +432,7 @@ def respond_405(self) -> None:
 
 
 def respond_418(self) -> None:
-    msg = "Enter the correct ID Project"
+    msg = "Check the entered data"
     send_response(self, 418, msg, "text/plain")
 
 
@@ -465,11 +452,10 @@ def send_response(self, code: int, msg: str, content_type: str, redirect_to="", 
     self.send_header("Content-length", len(msg))
 
     if cookie_master != "":
-        print(cookie_master)
         for item in cookie_master.values():
             self.send_header("Set-Cookie", item.OutputString())
 
-    #self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
+    # self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 
     self.end_headers()
 
