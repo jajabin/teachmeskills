@@ -130,7 +130,18 @@ def create_new_user_session() -> Dict[str, str]:
     return temp_user_data
 
 
-def save_user_data(self, _endpoint, _content_file):
+def save_user_data(self, endpoint: str, _content_file) -> None:
+    switcher = {
+        "/hello/set_night_mode": set_night_mode,
+        "/hello/save": write_user_data,
+    }
+    if endpoint in switcher:
+        switcher[endpoint](self, "/hello")
+    else:
+        raise MethodNotAllowed
+
+
+def write_user_data(self, _endpoint, _content_file):
     user_data = read_json_file("sessions.json")
     new_user_data = parse_user_sessions(self)
 

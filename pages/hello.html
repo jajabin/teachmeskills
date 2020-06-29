@@ -8,7 +8,7 @@
  </head>
  <body style="background-color:{background_color:};color:{text_color:};">
    <form method="post">
-          <button type="submit" class="slider" name="night_mode" formaction="/cv/set_night_mode">Night mode</button>
+          <button type="submit" class="slider" name="night_mode" formaction="/hello/set_night_mode">Night mode</button>
   </form>
     <form method="post">
         <p>Hey {name:}!</p>
@@ -21,7 +21,7 @@
             <label for="age">Age:</label>
             <input id="age" name="age"></input>
         </p>
-        <button type="submit" name="send">Send</button>
+        <button type="submit" name="send" formaction="/hello/save">Send</button>
     </form>
  </body>
 </html>
