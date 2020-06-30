@@ -1,11 +1,18 @@
 from datetime import datetime, timedelta
 from src.json_utils import *
-from src.server import *
+from src.responds import *
+from src.user_utils import *
+from src.errors import *
+from src.file_utils import *
+from src.night_mode import *
+
+PROJECT_DIR = Path(__file__).parent.parent.resolve()
+VISIR_COUNTERS = PROJECT_DIR / "visit_counters.json"
 
 
 def increment_page_visit(self, endpoint: str) -> None:
     today = str(datetime.today().date())
-    statistics_content = read_json_file("visit_counters.json")
+    statistics_content = read_json_file(VISIR_COUNTERS)
 
     if endpoint not in statistics_content:
         statistics_content[endpoint] = {}
@@ -13,7 +20,7 @@ def increment_page_visit(self, endpoint: str) -> None:
         statistics_content[endpoint][today] = 0
 
     statistics_content[endpoint][today] += 1
-    write_json_file("visit_counters.json", statistics_content)
+    write_json_file(VISIR_COUNTERS, statistics_content)
 
 
 def calculate_stats(page_statistics, start_date, count_days) -> int:
@@ -38,7 +45,7 @@ def get_page_statistics(self, method: str, endpoint: str, _qs) -> None:
 
 
 def show_page_statistics(self, _method, _endpoint) -> None:
-    statistics_content = read_json_file("visit_counters.json")
+    statistics_content = read_json_file(VISIR_COUNTERS)
 
     today = datetime.today().date()
     stats = {}
