@@ -1,24 +1,24 @@
 <body style="background-color:{background_color:};color:{text_color:};">
-  <form method="post">
-          <button type="submit" class="slider" name="night_mode" formaction="/cv/skills/set_night_mode">Night mode</button>
-  </form>
-  <div>
-	  <h1>{cv_name:}</h1>
-	  <h2>{position:}</h2>
-	  <p class="center">{about:}</p>
-  </div>
-   <div>
-       {cv_links:}
-  </div>
-  <div id="main">
-	  <div>
-	  	<h3>{head_skills:}</h3>
-		<ul>
-			<li>{skills:}
-		</ul>
-		<b>{head_additional:}</b>
-		<p>{others:}</p>
-	  </div>
-  </div>
- </body>
+<form method="post">
+    <button class="slider" formaction="/cv/skills/set_night_mode" name="night_mode" type="submit">Night mode</button>
+</form>
+<div>
+    <h1>{cv_name:}</h1>
+    <h2>{position:}</h2>
+    <p class="center">{about:}</p>
+</div>
+<div>
+    {cv_links:}
+</div>
+<div id="main">
+    <div>
+        <h3>{head_skills:}</h3>
+        <ul>
+            <li>{skills:}
+        </ul>
+        <b>{head_additional:}</b>
+        <p>{others:}</p>
+    </div>
+</div>
+</body>
 </html>

@@ -1,12 +1,15 @@
-import socketserver
 import os
+import socketserver
 from http.server import SimpleHTTPRequestHandler
-from src.errors import *
-from src.goodbye_page import *
-from src.responds import *
-from src.hello_page import *
-from src.cv_page import *
-from src.css_style import *
+
+import logging
+import src.common.errors as errors
+import src.common.responds as responds
+import src.pages.cv_page as cv
+from src.pages.goodbye_page import get_page_goodbye
+from src.pages.hello_page import get_page_hello
+from src.pages.statistics_page import get_page_statistics
+from src.styles.css_style import get_cv_style
 
 PORT = int(os.getenv("PORT", 8000))
 print(f"PORT={PORT}")
@@ -29,23 +32,23 @@ def do(self, method: str) -> None:
         "/hello/set_night_mode": get_page_hello,
         "/goodbye": get_page_goodbye,
         "/goodbye/set_night_mode": get_page_goodbye,
-        "/cv": get_page_cv,
-        "/cv/set_night_mode": get_page_cv,
-        "/cv/job": get_page_cv_job,
-        "/cv/job/set_night_mode": get_page_cv_job,
-        "/cv/education": get_page_cv_education,
-        "/cv/education/set_night_mode": get_page_cv_education,
-        "/cv/skills": get_page_cv_skills,
-        "/cv/skills/set_night_mode": get_page_cv_skills,
-        "/cv/projects": get_page_cv_projects,
-        "/cv/projects/set_night_mode": get_page_cv_projects,
+        "/cv": cv.get_page_cv,
+        "/cv/set_night_mode": cv.get_page_cv,
+        "/cv/job": cv.get_page_cv_job,
+        "/cv/job/set_night_mode": cv.get_page_cv_job,
+        "/cv/education": cv.get_page_cv_education,
+        "/cv/education/set_night_mode": cv.get_page_cv_education,
+        "/cv/skills": cv.get_page_cv_skills,
+        "/cv/skills/set_night_mode": cv.get_page_cv_skills,
+        "/cv/projects": cv.get_page_cv_projects,
+        "/cv/projects/set_night_mode": cv.get_page_cv_projects,
         "/statistics": get_page_statistics,
         "/statistics/set_night_mode": get_page_statistics,
-        "/cv/projects/editing": get_page_projects_editing,
-        "/cv/projects/editing/add": get_page_projects_editing,
-        "/cv/projects/editing/edit": get_page_projects_editing,
-        "/cv/projects/editing/delete": get_page_projects_editing,
-        "/cv/projects/editing/set_night_mode": get_page_projects_editing,
+        "/cv/projects/editing": cv.get_page_projects_editing,
+        "/cv/projects/editing/add": cv.get_page_projects_editing,
+        "/cv/projects/editing/edit": cv.get_page_projects_editing,
+        "/cv/projects/editing/delete": cv.get_page_projects_editing,
+        "/cv/projects/editing/set_night_mode": cv.get_page_projects_editing,
     }
 
     # get a page via dict.get (usable in do_GET)
@@ -63,13 +66,13 @@ def do(self, method: str) -> None:
             switcher[endpoint](self, method, endpoint, qs)
         else:
             # return SimpleHTTPRequestHandler.do_GET(self)
-            raise PageNotFoundError
-    except (FileNotFoundError, PageNotFoundError):
-        respond_404(self)
-    except MethodNotAllowed:
-        respond_405(self)
-    except MissingData:
-        respond_418(self)
+            raise errors.PageNotFoundError
+    except (FileNotFoundError, errors.PageNotFoundError):
+        responds.respond_404(self)
+    except errors.MethodNotAllowed:
+        responds.respond_405(self)
+    except errors.MissingData:
+        responds.respond_418(self)
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -80,18 +83,18 @@ class MyHandler(SimpleHTTPRequestHandler):
         #     return SimpleHTTPRequestHandler.do_GET(self)
         try:
             do(self, "GET")
-        except UnknownPath:
+        except errors.UnknownPath:
             SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
         try:
             do(self, "POST")
-        except UnknownPath:
-            SimpleHTTPRequestHandler.do_GET(self)
+        except errors.UnknownPath:
+            SimpleHTTPRequestHandler.do_POST(self)
 
 
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         # httpd = socketserver.TCPServer(("", PORT), MyHandler)
-        print("it works")
+        logging.info("it works")
         httpd.serve_forever()

@@ -21,7 +21,14 @@ def respond_302(self, redirect_to: str, cookies_content="") -> None:
     send_response(self, 302, "", "text/plain", redirect_to, cookies_content)
 
 
-def send_response(self, code: int, msg: str, content_type: str, redirect_to="", cookie_master="") -> None:
+def send_response(
+        self,
+        code: int,
+        msg: str,
+        content_type: str,
+        redirect_to="",
+        cookie_master=""
+) -> None:
     msg = msg.encode()
 
     self.send_response(code)

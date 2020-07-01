@@ -1,4 +1,4 @@
-class PageNotFoundError(Exception): #what's Exception and RuntimeError ???
+class PageNotFoundError(Exception):  # what's Exception and RuntimeError ???
     pass
 
 

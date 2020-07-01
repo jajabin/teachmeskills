@@ -1,9 +1,12 @@
-from src.errors import *
-from src.file_utils import *
-from src.responds import *
-from src.night_mode import *
-from src.statistics_page import *
-from datetime import datetime, timedelta
+from datetime import datetime
+
+import src.common.errors as errors
+import src.common.night_mode as nm
+import src.common.paths as paths
+import src.common.responds as responds
+import src.pages.statistics_page as stats
+import src.utils.file_utils as fu
+import src.utils.user_utils as uu
 
 
 def get_page_goodbye(self, method: str, endpoint: str, _qs) -> None:
@@ -14,29 +17,30 @@ def get_page_goodbye(self, method: str, endpoint: str, _qs) -> None:
     if method in switcher:
         switcher[method](self, endpoint, "/goodbye")
     else:
-        raise MethodNotAllowed
+        raise errors.MethodNotAllowed
 
 
 def show_page_goodbye(self, endpoint: str, _redirect_to) -> None:
-    increment_page_visit(self, endpoint)
+    stats.increment_page_visit(endpoint)
     today = datetime.today()
     phrase = say_bye(today.hour)
 
-    user_id = get_user_id(self)
-    user_session = read_user_session(self, user_id)
+    user_id = uu.get_user_id(self)
+    user_session = uu.read_user_session(user_id)
 
-    msg = get_file_contents("pages/goodbye.html").format(date=today, phrase=phrase, **user_session[user_id])  # format ???
-    respond_200(self, msg, "text/html")
+    msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase,
+                                                          **user_session[user_id])  # format ???
+    responds.respond_200(self, msg, "text/html")
 
 
 def save_page_goodbye(self, endpoint: str, redirect_to: str):
     switcher = {
-        "/goodbye/set_night_mode": set_night_mode,
+        "/goodbye/set_night_mode": nm.set_night_mode,
     }
     if endpoint in switcher:
         switcher[endpoint](self, redirect_to)
     else:
-        raise MethodNotAllowed
+        raise errors.MethodNotAllowed
 
 
 def say_bye(hour) -> str:
@@ -52,4 +56,3 @@ def say_bye(hour) -> str:
         return "Good Evening!"
     else:
         return "Invalid value."
-
