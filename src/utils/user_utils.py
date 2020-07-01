@@ -1,4 +1,3 @@
-import logging
 import uuid
 from datetime import datetime
 from typing import Dict
@@ -12,9 +11,9 @@ import src.utils.json_utils as ju
 
 def get_user_id(server_inst) -> str:
     cookies_content = cu.get_cookies(server_inst)
-    logging.info(f"cookies content = {cookies_content}")
+    print(f"cookies content = {cookies_content}")
 
-    return cookies_content["user_id"] if "user_id" in cookies_content else str(uuid.uuid1())
+    return cookies_content[instances.USER_ID] if instances.USER_ID in cookies_content else str(uuid.uuid1())
 
 
 def read_user_session(user_id: str) -> Dict[str, str]:
@@ -23,10 +22,10 @@ def read_user_session(user_id: str) -> Dict[str, str]:
     current_user = {}
     if user_id in user_data:
         current_user[user_id] = user_data[user_id]
-        if current_user[user_id]["age"]:
+        if current_user[user_id][instances.AGE_key]:
             today = datetime.today().year
-            age = int(current_user[user_id]["age"])
-            current_user[user_id]["year"] = str(today - age)
+            age = int(current_user[user_id][instances.AGE_key])
+            current_user[user_id][instances.YEAR_key] = str(today - age)
     else:
         current_user[user_id] = create_new_user_session()
         # user_data.update(current_user_session)

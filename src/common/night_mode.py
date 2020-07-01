@@ -14,7 +14,7 @@ def set_night_mode(server_inst, endpoint: str, _file_content=""):
     new_colors = get_colors(user_session[user_id])
     user_session[user_id].update(new_colors)
     ju.update_json_file(user_session, paths.USER_SESSIONS)
-    cookie_master = cu.set_cookies(server_inst, {"user_id": user_id})
+    cookie_master = cu.set_cookies(server_inst, {instances.USER_ID: user_id})
     responds.respond_302(server_inst, endpoint, cookie_master)
 
 

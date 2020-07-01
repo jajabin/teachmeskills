@@ -32,7 +32,8 @@ def get_page_cv_projects(server_inst, method: str, endpoint: str, _qs) -> None:
 
 
 def get_page_projects_editing(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/projects/editing", paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML)
+    get_page(server_inst, method, endpoint, "/cv/projects/editing", paths.CV_PROJECTS_JSON,
+             paths.CV_PROJECTS_EDITING_HTML)
 
 
 def get_page(server_inst, method: str, endpoint: str, redirect_to: str, file_content: Path, file_html: Path) -> None:
@@ -112,18 +113,19 @@ def save_page_cv(server_inst, endpoint: str, redirect_to: str, file_content: Pat
         raise errors.MethodNotAllowed
 
 
-def edit_project(server_inst, _redirect_to, file_content: Path) -> None:
+def edit_project(server_inst, redirect_to, file_content: Path) -> None:
+    print(redirect_to)
     new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
 
-    if "project_id" not in new_project_content:
+    if instances.PROJECT_ID not in new_project_content:
         responds.respond_418(server_inst)
-    if new_project_content["project_id"] not in projects_content:
+    if new_project_content[instances.PROJECT_ID] not in projects_content:
         responds.respond_418(server_inst)
 
     for item in new_project_content:
-        if item != "project_id":
-            projects_content[new_project_content["project_id"]][item] = new_project_content[item]
+        if item != instances.PROJECT_ID:
+            projects_content[new_project_content[instances.PROJECT_ID]][item] = new_project_content[item]
 
     ju.write_json_file(file_content, projects_content)
     responds.respond_302(server_inst, "/cv/projects")
@@ -134,11 +136,11 @@ def add_project(server_inst, _redirect_to, file_content: Path) -> None:
     projects_content = ju.read_json_file(file_content)
     new_project = {}
 
-    if "project_id" not in new_project_content:
+    if instances.PROJECT_ID not in new_project_content:
         responds.respond_418(server_inst)
-    if new_project_content["project_id"] is projects_content:
+    if new_project_content[instances.PROJECT_ID] is projects_content:
         responds.respond_418(server_inst)
-    id_new_project = new_project_content["project_id"]
+    id_new_project = new_project_content[instances.PROJECT_ID]
     new_project[id_new_project] = instances.NEW_PROJECT
 
     for item in new_project_content:
@@ -154,12 +156,12 @@ def remove_project(server_inst, _redirect_to, file_content: Path) -> None:
     new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
 
-    if "project_id" not in new_project_content:
+    if instances.PROJECT_ID not in new_project_content:
         responds.respond_418(server_inst)
-    if new_project_content["project_id"] not in projects_content:
+    if new_project_content[instances.PROJECT_ID] not in projects_content:
         responds.respond_418(server_inst)
 
-    projects_content.pop(new_project_content["project_id"])
+    projects_content.pop(new_project_content[instances.PROJECT_ID])
 
     ju.write_json_file(file_content, projects_content)
     responds.respond_302(server_inst, "/cv/projects")

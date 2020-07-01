@@ -51,10 +51,10 @@ def write_user_data(server_inst, _endpoint):
     new_user = instances.NEW_USER
     new_user.update(uu.parse_received_data(server_inst))
 
-    if new_user["age"]:
+    if new_user[instances.AGE_key]:
         today = datetime.today().year
-        age = int(new_user["age"])
-        new_user["year"] = str(today - age)
+        age = int(new_user[instances.AGE_key])
+        new_user[instances.YEAR_key] = str(today - age)
 
     user_id = str(uuid.uuid1())
     if user_id not in user_data:
@@ -63,6 +63,6 @@ def write_user_data(server_inst, _endpoint):
     user_data[user_id].update(new_user)
 
     ju.update_json_file(user_data, paths.USER_SESSIONS)
-    cookie_master = cu.set_cookies(server_inst, {"user_id": user_id})
+    cookie_master = cu.set_cookies(server_inst, {instances.USER_ID: user_id})
 
     responds.respond_302(server_inst, "/hello", cookie_master)

@@ -38,8 +38,7 @@ def get_page_statistics(server_inst, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_statistics,
     }
     if method in switcher:
-        print(endpoint)
-        switcher[method](server_inst, endpoint, "/statistics")
+        switcher[method](server_inst, endpoint, "/statistics/")
     else:
         raise errors.MethodNotAllowed
 
