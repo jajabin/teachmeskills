@@ -94,5 +94,5 @@ class MyHandler(SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         # httpd = socketserver.TCPServer(("", PORT), MyHandler)
-        logging.info("it works")
+        logging.info('it works')
         httpd.serve_forever()

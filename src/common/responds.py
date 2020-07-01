@@ -4,17 +4,17 @@ def respond_200(server_inst, msg: str, content_type="text/plain", cookies_conten
 
 def respond_404(server_inst) -> None:
     msg = "Error 404: File not found"
-    send_response(server_inst, 404, msg, "text/plain")
+    send_response(server_inst, 404, msg)
 
 
 def respond_405(server_inst) -> None:
     msg = "Error 405: Method not allowed"
-    send_response(server_inst, 405, msg, "text/plain")
+    send_response(server_inst, 405, msg)
 
 
 def respond_418(server_inst) -> None:
     msg = "Check the entered data"
-    send_response(server_inst, 418, msg, "text/plain")
+    send_response(server_inst, 418, msg)
 
 
 def respond_302(server_inst, redirect_to: str, cookies_content="") -> None:
@@ -25,7 +25,7 @@ def send_response(
         server_inst,
         code: int,
         msg: str,
-        content_type: str,
+        content_type="text/plain",
         redirect_to="",
         cookie_master=""
 ) -> None:
@@ -41,8 +41,8 @@ def send_response(
 
     print(f"cookies = {cookie_master}")
     if cookie_master != "":
-        for item in cookie_master.values():
-            server_inst.send_header("Set-Cookie", item.OutputString())
+        for cookie in cookie_master.values():
+            server_inst.send_header("Set-Cookie", cookie.OutputString())
 
     # server_inst.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 

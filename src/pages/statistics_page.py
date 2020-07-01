@@ -38,12 +38,13 @@ def get_page_statistics(server_inst, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_statistics,
     }
     if method in switcher:
+        print(endpoint)
         switcher[method](server_inst, endpoint, "/statistics")
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_statistics(server_inst, _method, _endpoint) -> None:
+def show_page_statistics(server_inst, _endpoint, _redirect_to) -> None:
     statistics_content = ju.read_json_file(paths.VISIR_COUNTERS)
 
     today = datetime.today().date()
