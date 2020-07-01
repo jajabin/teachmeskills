@@ -1,8 +1,8 @@
+import logging
 import os
 import socketserver
 from http.server import SimpleHTTPRequestHandler
 
-import logging
 import src.common.errors as errors
 import src.common.responds as responds
 import src.pages.cv_page as cv

@@ -1,9 +1,9 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Dict
 from urllib.parse import parse_qs
 
-import logging
 import src.common.instances as instances
 import src.common.paths as paths
 import src.utils.cookies_utils as cu

@@ -19,6 +19,6 @@ def set_night_mode(self, endpoint: str, _file_content=""):
 
 
 def get_colors(user_context: Dict) -> Dict[str, str]:
-    user_context[instances.BCKG_COLOR], user_context[instances.TXT_COLOR] = user_context[instances.TXT_COLOR], user_context[
-        instances.BCKG_COLOR]
+    user_context[instances.BCKG_COLOR], user_context[instances.TXT_COLOR] = \
+        user_context[instances.TXT_COLOR], user_context[instances.BCKG_COLOR]
     return user_context
