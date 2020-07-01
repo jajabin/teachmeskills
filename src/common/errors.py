@@ -8,7 +8,3 @@ class MethodNotAllowed(Exception):
 
 class UnknownPath(Exception):
     pass
-
-
-class MissingData(Exception):
-    pass

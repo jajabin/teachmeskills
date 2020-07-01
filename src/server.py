@@ -71,8 +71,6 @@ def do(self, method: str) -> None:
         responds.respond_404(self)
     except errors.MethodNotAllowed:
         responds.respond_405(self)
-    except errors.MissingData:
-        responds.respond_418(self)
 
 
 class MyHandler(SimpleHTTPRequestHandler):

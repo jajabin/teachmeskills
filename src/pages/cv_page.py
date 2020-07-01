@@ -117,9 +117,9 @@ def edit_project(self, _redirect_to, file_content: Path) -> None:
     projects_content = ju.read_json_file(file_content)
 
     if "project_id" not in new_project_content:
-        raise errors.MissingData
+        responds.respond_418(self)
     if new_project_content["project_id"] not in projects_content:
-        raise errors.MissingData
+        responds.respond_418(self)
 
     for item in new_project_content:
         if item != "project_id":
@@ -135,9 +135,9 @@ def add_project(self, _redirect_to, file_content: Path) -> None:
     new_project = {}
 
     if "project_id" not in new_project_content:
-        raise errors.MissingData
+        responds.respond_418(self)
     if new_project_content["project_id"] is projects_content:
-        raise errors.MissingData
+        responds.respond_418(self)
     id_new_project = new_project_content["project_id"]
     new_project[id_new_project] = instances.NEW_PROJECT
 
@@ -155,9 +155,9 @@ def remove_project(self, _redirect_to, file_content: Path) -> None:
     projects_content = ju.read_json_file(file_content)
 
     if "project_id" not in new_project_content:
-        raise errors.MissingData
+        responds.respond_418(self)
     if new_project_content["project_id"] not in projects_content:
-        raise errors.MissingData
+        responds.respond_418(self)
 
     projects_content.pop(new_project_content["project_id"])
 
