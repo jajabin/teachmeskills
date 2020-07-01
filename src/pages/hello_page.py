@@ -19,12 +19,12 @@ def get_page_hello(server_inst, method: str, endpoint: str, _qs) -> None:
         "POST": save_user_data,
     }
     if method in switcher:
-        switcher[method](server_inst, endpoint, paths.USER_SESSIONS)
+        switcher[method](server_inst, endpoint)
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_hello(server_inst, endpoint: str, _content_file):
+def show_page_hello(server_inst, endpoint: str):
     stats.increment_page_visit(endpoint)
     user_id = uu.get_user_id(server_inst)
     user_session = uu.read_user_session(user_id)
@@ -35,18 +35,23 @@ def show_page_hello(server_inst, endpoint: str, _content_file):
     responds.respond_200(server_inst, msg, "text/html")
 
 
-def save_user_data(server_inst, endpoint: str, _content_file) -> None:
+def get_redirect_to(endpoint: str) -> str:
+    return instances.ENDPOINT_REDIRECTS[endpoint]
+
+
+def save_user_data(server_inst, endpoint: str) -> None:
+    redirect_to = get_redirect_to(endpoint)
     switcher = {
         "/hello/set_night_mode": nm.set_night_mode,
         "/hello/save": write_user_data,
     }
     if endpoint in switcher:
-        switcher[endpoint](server_inst, "/hello")
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
 
 
-def write_user_data(server_inst, _endpoint):
+def write_user_data(server_inst, redirect_to):
     user_data = ju.read_json_file(paths.USER_SESSIONS)
     new_user = instances.NEW_USER
     new_user.update(uu.parse_received_data(server_inst))
@@ -65,4 +70,4 @@ def write_user_data(server_inst, _endpoint):
     ju.update_json_file(user_data, paths.USER_SESSIONS)
     cookie_master = cu.set_cookies(server_inst, {instances.USER_ID: user_id})
 
-    responds.respond_302(server_inst, "/hello", cookie_master)
+    responds.respond_302(server_inst, redirect_to, cookie_master)

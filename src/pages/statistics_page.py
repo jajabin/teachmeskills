@@ -11,7 +11,7 @@ import src.utils.user_utils as uu
 
 def increment_page_visit(endpoint: str) -> None:
     today = str(datetime.today().date())
-    statistics_content = ju.read_json_file(paths.VISIR_COUNTERS)
+    statistics_content = ju.read_json_file(paths.VISIT_COUNTERS)
 
     if endpoint not in statistics_content:
         statistics_content[endpoint] = {}
@@ -19,7 +19,7 @@ def increment_page_visit(endpoint: str) -> None:
         statistics_content[endpoint][today] = 0
 
     statistics_content[endpoint][today] += 1
-    ju.write_json_file(paths.VISIR_COUNTERS, statistics_content)
+    ju.write_json_file(paths.VISIT_COUNTERS, statistics_content)
 
 
 def calculate_stats(page_statistics, start_date, count_days) -> int:
@@ -44,7 +44,7 @@ def get_page_statistics(server_inst, method: str, endpoint: str, _qs) -> None:
 
 
 def show_page_statistics(server_inst, _endpoint, _redirect_to) -> None:
-    statistics_content = ju.read_json_file(paths.VISIR_COUNTERS)
+    statistics_content = ju.read_json_file(paths.VISIT_COUNTERS)
 
     today = datetime.today().date()
     stats = {}

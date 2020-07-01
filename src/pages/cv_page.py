@@ -12,47 +12,46 @@ import src.utils.user_utils as uu
 
 
 def get_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv", None, paths.CV_HTML)
+    get_page(server_inst, method, endpoint, None, paths.CV_HTML)
 
 
 def get_page_cv_education(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/education", paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML)
+    get_page(server_inst, method, endpoint, paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML)
 
 
 def get_page_cv_job(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/job", paths.CV_JOB_JSON, paths.CV_JOB_HTML)
+    get_page(server_inst, method, endpoint, paths.CV_JOB_JSON, paths.CV_JOB_HTML)
 
 
 def get_page_cv_skills(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/skills", paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML)
+    get_page(server_inst, method, endpoint, paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML)
 
 
 def get_page_cv_projects(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/projects", paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML)
+    get_page(server_inst, method, endpoint, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML)
 
 
 def get_page_projects_editing(server_inst, method: str, endpoint: str, _qs) -> None:
-    get_page(server_inst, method, endpoint, "/cv/projects/editing", paths.CV_PROJECTS_JSON,
+    get_page(server_inst, method, endpoint, paths.CV_PROJECTS_JSON,
              paths.CV_PROJECTS_EDITING_HTML)
 
 
-def get_page(server_inst, method: str, endpoint: str, redirect_to: str, file_content: Path, file_html: Path) -> None:
+def get_page(server_inst, method: str, endpoint: str, file_content: Path, file_html: Path) -> None:
     switcher = {
         "GET": show_page_cv,
         "POST": save_page_cv,
     }
     if method in switcher:
-        switcher[method](server_inst, endpoint, redirect_to, file_content, file_html)
+        switcher[method](server_inst, endpoint, file_content, file_html)
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_cv(server_inst, endpoint: str, _redirect_to, file_content: str, file_html: str) -> None:
+def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) -> None:
     """
     show a page
     :param server_inst: server instance
     :param endpoint: current endpoint
-    :param _redirect_to: not used
     :param file_content: text content
     :param file_html: html code
     :return: nothing
@@ -86,16 +85,22 @@ def show_page_cv(server_inst, endpoint: str, _redirect_to, file_content: str, fi
     responds.respond_200(server_inst, msg, "text/html")
 
 
-def save_page_cv(server_inst, endpoint: str, redirect_to: str, file_content: Path, _file_html) -> None:
+def get_redirect_to(endpoint: str) -> str:
+    return instances.ENDPOINT_REDIRECTS[endpoint]
+
+
+def save_page_cv(server_inst, endpoint: str, file_content: Path, _file_html) -> None:
     """
     save some settings
     :param server_inst: server instance
     :param endpoint: current endpoint
-    :param redirect_to: where to redirect
     :param file_content: text content (for projects editing)
     :param _file_html: not used
     :return: nothing
     """
+
+    redirect_to = get_redirect_to(endpoint)
+
     switcher = {
         "/cv/set_night_mode": nm.set_night_mode,
         "/cv/job/set_night_mode": nm.set_night_mode,

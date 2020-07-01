@@ -4,7 +4,8 @@ from http.server import SimpleHTTPRequestHandler
 
 import src.common.errors as errors
 import src.common.responds as responds
-import src.pages.cv_page as cv
+import src.common.instances as instance
+from src.pages.cv_page import get_page_cv, get_page_cv_education, get_page_cv_job, get_page_cv_projects, get_page_cv_skills, get_page_projects_editing
 from src.pages.goodbye_page import get_page_goodbye
 from src.pages.hello_page import get_page_hello
 from src.pages.statistics_page import get_page_statistics
@@ -25,30 +26,7 @@ def do(self, method: str) -> None:
         return
 
     endpoint = endpoint.rstrip('/')
-    switcher = {
-        "/hello": get_page_hello,
-        "/hello/save": get_page_hello,
-        "/hello/set_night_mode": get_page_hello,
-        "/goodbye": get_page_goodbye,
-        "/goodbye/set_night_mode": get_page_goodbye,
-        "/cv": cv.get_page_cv,
-        "/cv/set_night_mode": cv.get_page_cv,
-        "/cv/job": cv.get_page_cv_job,
-        "/cv/job/set_night_mode": cv.get_page_cv_job,
-        "/cv/education": cv.get_page_cv_education,
-        "/cv/education/set_night_mode": cv.get_page_cv_education,
-        "/cv/skills": cv.get_page_cv_skills,
-        "/cv/skills/set_night_mode": cv.get_page_cv_skills,
-        "/cv/projects": cv.get_page_cv_projects,
-        "/cv/projects/set_night_mode": cv.get_page_cv_projects,
-        "/statistics": get_page_statistics,
-        "/statistics/set_night_mode": get_page_statistics,
-        "/cv/projects/editing": cv.get_page_projects_editing,
-        "/cv/projects/editing/add": cv.get_page_projects_editing,
-        "/cv/projects/editing/edit": cv.get_page_projects_editing,
-        "/cv/projects/editing/delete": cv.get_page_projects_editing,
-        "/cv/projects/editing/set_night_mode": cv.get_page_projects_editing,
-    }
+    switcher = instance.ENDPOINT_FUNCTIONS
 
     # get a page via dict.get (usable in do_GET)
     # if switcher doesn't contain endpoint, return SimpleHTTPRequestHandler function
@@ -62,7 +40,7 @@ def do(self, method: str) -> None:
 
     try:
         if endpoint in switcher:
-            switcher[endpoint](self, method, endpoint, qs)
+            eval(switcher[endpoint])(self, method, endpoint, qs)
         else:
             # return SimpleHTTPRequestHandler.do_GET(self)
             raise errors.PageNotFoundError

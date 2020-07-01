@@ -2,8 +2,10 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).parent.parent.parent.resolve()  # full path to dir where file is located
 
+ENDPOINTS_SET = PROJECT_DIR / "src/endpoint_functions.json"
+
 USER_SESSIONS = PROJECT_DIR / "sessions.json"
-VISIR_COUNTERS = PROJECT_DIR / "visit_counters.json"
+VISIT_COUNTERS = PROJECT_DIR / "visit_counters.json"
 
 CV_STYLE = PROJECT_DIR / "pages/cv_style.css"
 

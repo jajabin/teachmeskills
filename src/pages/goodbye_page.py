@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import src.common.errors as errors
+import src.common.instances as instances
 import src.common.night_mode as nm
 import src.common.paths as paths
 import src.common.responds as responds
@@ -15,12 +16,12 @@ def get_page_goodbye(server_inst, method: str, endpoint: str, _qs) -> None:
         "POST": save_page_goodbye,
     }
     if method in switcher:
-        switcher[method](server_inst, endpoint, "/goodbye")
+        switcher[method](server_inst, endpoint)
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_goodbye(server_inst, endpoint: str, _redirect_to) -> None:
+def show_page_goodbye(server_inst, endpoint: str) -> None:
     stats.increment_page_visit(endpoint)
     today = datetime.today()
     phrase = say_bye(today.hour)
@@ -33,7 +34,12 @@ def show_page_goodbye(server_inst, endpoint: str, _redirect_to) -> None:
     responds.respond_200(server_inst, msg, "text/html")
 
 
-def save_page_goodbye(server_inst, endpoint: str, redirect_to: str):
+def get_redirect_to(endpoint: str) -> str:
+    return instances.ENDPOINT_REDIRECTS[endpoint]
+
+
+def save_page_goodbye(server_inst, endpoint: str):
+    redirect_to = get_redirect_to(endpoint)
     switcher = {
         "/goodbye/set_night_mode": nm.set_night_mode,
     }
