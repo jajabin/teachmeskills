@@ -9,36 +9,36 @@ import src.utils.file_utils as fu
 import src.utils.user_utils as uu
 
 
-def get_page_goodbye(self, method: str, endpoint: str, _qs) -> None:
+def get_page_goodbye(server_inst, method: str, endpoint: str, _qs) -> None:
     switcher = {
         "GET": show_page_goodbye,
         "POST": save_page_goodbye,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "/goodbye")
+        switcher[method](server_inst, endpoint, "/goodbye")
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_goodbye(self, endpoint: str, _redirect_to) -> None:
+def show_page_goodbye(server_inst, endpoint: str, _redirect_to) -> None:
     stats.increment_page_visit(endpoint)
     today = datetime.today()
     phrase = say_bye(today.hour)
 
-    user_id = uu.get_user_id(self)
+    user_id = uu.get_user_id(server_inst)
     user_session = uu.read_user_session(user_id)
 
     msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase,
                                                           **user_session[user_id])  # format ???
-    responds.respond_200(self, msg, "text/html")
+    responds.respond_200(server_inst, msg, "text/html")
 
 
-def save_page_goodbye(self, endpoint: str, redirect_to: str):
+def save_page_goodbye(server_inst, endpoint: str, redirect_to: str):
     switcher = {
         "/goodbye/set_night_mode": nm.set_night_mode,
     }
     if endpoint in switcher:
-        switcher[endpoint](self, redirect_to)
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
 

@@ -10,8 +10,8 @@ import src.utils.cookies_utils as cu
 import src.utils.json_utils as ju
 
 
-def get_user_id(self) -> str:
-    cookies_content = cu.get_cookies(self)
+def get_user_id(server_inst) -> str:
+    cookies_content = cu.get_cookies(server_inst)
     logging.info(f"cookies content = {cookies_content}")
 
     return cookies_content["user_id"] if "user_id" in cookies_content else str(uuid.uuid1())
@@ -39,9 +39,9 @@ def create_new_user_session() -> Dict[str, str]:
     return instances.NEW_USER
 
 
-def parse_user_sessions(self) -> Dict[str, str]:
-    content_length = int(self.headers["Content-Length"])
-    data = self.rfile.read(content_length)
+def parse_received_data(server_inst) -> Dict[str, str]:
+    content_length = int(server_inst.headers["Content-Length"])
+    data = server_inst.rfile.read(content_length)
     payload = data.decode()
     qs = parse_qs(payload)
     user_data = {}

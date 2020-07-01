@@ -5,8 +5,8 @@ from typing import Dict
 import src.common.instances as instance
 
 
-def get_cookies(self) -> Dict[str, str]:
-    cookies_content = self.headers.get('Cookie')
+def get_cookies(server_inst) -> Dict[str, str]:
+    cookies_content = server_inst.headers.get('Cookie')
     if cookies_content is None:  # if not cookies_content:
         return {}
     cookies_content = cookies_content.replace(" ", "")
@@ -14,8 +14,8 @@ def get_cookies(self) -> Dict[str, str]:
     return cookies_content
 
 
-def set_cookies(self, cookies_content: dict):
-    cookie_master = cookies.SimpleCookie(self.headers.get('Cookie'))
+def set_cookies(server_inst, cookies_content: dict):
+    cookie_master = cookies.SimpleCookie(server_inst.headers.get('Cookie'))
     expired_date = datetime.now() + timedelta(days=instance.COOKIE_TERM)
     for name, value in cookies_content.items():
         cookie_master[name] = value

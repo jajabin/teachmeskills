@@ -1,28 +1,28 @@
-def respond_200(self, msg: str, content_type="text/plain", cookies_content="") -> None:
-    send_response(self, 200, msg, content_type, "", cookies_content)
+def respond_200(server_inst, msg: str, content_type="text/plain", cookies_content="") -> None:
+    send_response(server_inst, 200, msg, content_type, "", cookies_content)
 
 
-def respond_404(self) -> None:
+def respond_404(server_inst) -> None:
     msg = "Error 404: File not found"
-    send_response(self, 404, msg, "text/plain")
+    send_response(server_inst, 404, msg, "text/plain")
 
 
-def respond_405(self) -> None:
+def respond_405(server_inst) -> None:
     msg = "Error 405: Method not allowed"
-    send_response(self, 405, msg, "text/plain")
+    send_response(server_inst, 405, msg, "text/plain")
 
 
-def respond_418(self) -> None:
+def respond_418(server_inst) -> None:
     msg = "Check the entered data"
-    send_response(self, 418, msg, "text/plain")
+    send_response(server_inst, 418, msg, "text/plain")
 
 
-def respond_302(self, redirect_to: str, cookies_content="") -> None:
-    send_response(self, 302, "", "text/plain", redirect_to, cookies_content)
+def respond_302(server_inst, redirect_to: str, cookies_content="") -> None:
+    send_response(server_inst, 302, "", "text/plain", redirect_to, cookies_content)
 
 
 def send_response(
-        self,
+        server_inst,
         code: int,
         msg: str,
         content_type: str,
@@ -31,21 +31,21 @@ def send_response(
 ) -> None:
     msg = msg.encode()
 
-    self.send_response(code)
-    self.send_header("Content-type", content_type)
+    server_inst.send_response(code)
+    server_inst.send_header("Content-type", content_type)
 
     if redirect_to != "":
-        self.send_header("Location", redirect_to)
+        server_inst.send_header("Location", redirect_to)
 
-    self.send_header("Content-length", len(msg))
+    server_inst.send_header("Content-length", len(msg))
 
     print(f"cookies = {cookie_master}")
     if cookie_master != "":
         for item in cookie_master.values():
-            self.send_header("Set-Cookie", item.OutputString())
+            server_inst.send_header("Set-Cookie", item.OutputString())
 
-    # self.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
+    # server_inst.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 
-    self.end_headers()
+    server_inst.end_headers()
 
-    self.wfile.write(msg)
+    server_inst.wfile.write(msg)

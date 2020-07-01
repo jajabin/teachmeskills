@@ -32,18 +32,18 @@ def calculate_stats(page_statistics, start_date, count_days) -> int:
     return visit_counter
 
 
-def get_page_statistics(self, method: str, endpoint: str, _qs) -> None:
+def get_page_statistics(server_inst, method: str, endpoint: str, _qs) -> None:
     switcher = {
         "GET": show_page_statistics,
         "POST": save_page_statistics,
     }
     if method in switcher:
-        switcher[method](self, endpoint, "/statistics")
+        switcher[method](server_inst, endpoint, "/statistics")
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_statistics(self, _method, _endpoint) -> None:
+def show_page_statistics(server_inst, _method, _endpoint) -> None:
     statistics_content = ju.read_json_file(paths.VISIR_COUNTERS)
 
     today = datetime.today().date()
@@ -68,18 +68,18 @@ def show_page_statistics(self, _method, _endpoint) -> None:
             html += f"<td>{count}</td>"
     html += "</tr>"
 
-    user_id = uu.get_user_id(self)
+    user_id = uu.get_user_id(server_inst)
     user_session = uu.read_user_session(user_id)
 
     msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
-    responds.respond_200(self, msg, "text/html")
+    responds.respond_200(server_inst, msg, "text/html")
 
 
-def save_page_statistics(self, endpoint: str, redirect_to: str):
+def save_page_statistics(server_inst, endpoint: str, redirect_to: str):
     switcher = {
         "/statistics/set_night_mode": nm.set_night_mode,
     }
     if endpoint in switcher:
-        switcher[endpoint](self, redirect_to)
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
