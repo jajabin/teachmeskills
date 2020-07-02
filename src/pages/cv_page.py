@@ -133,10 +133,10 @@ def edit_project(server_inst, redirect_to, file_content: Path) -> None:
             projects_content[new_project_content[instances.PROJECT_ID]][item] = new_project_content[item]
 
     ju.write_json_file(file_content, projects_content)
-    responds.respond_302(server_inst, "/cv/projects")
+    responds.respond_302(server_inst, redirect_to)
 
 
-def add_project(server_inst, _redirect_to, file_content: Path) -> None:
+def add_project(server_inst, redirect_to, file_content: Path) -> None:
     new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
     new_project = {}
@@ -154,10 +154,10 @@ def add_project(server_inst, _redirect_to, file_content: Path) -> None:
 
     projects_content.update(new_project)
     ju.write_json_file(file_content, projects_content)
-    responds.respond_302(server_inst, "/cv/projects")
+    responds.respond_302(server_inst, redirect_to)
 
 
-def remove_project(server_inst, _redirect_to, file_content: Path) -> None:
+def remove_project(server_inst, redirect_to, file_content: Path) -> None:
     new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
 
@@ -169,4 +169,4 @@ def remove_project(server_inst, _redirect_to, file_content: Path) -> None:
     projects_content.pop(new_project_content[instances.PROJECT_ID])
 
     ju.write_json_file(file_content, projects_content)
-    responds.respond_302(server_inst, "/cv/projects")
+    responds.respond_302(server_inst, redirect_to)

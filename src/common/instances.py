@@ -1,19 +1,26 @@
-BCKG_COLOR = "background_color"
-TXT_COLOR = "text_color"
+import src.common.night_mode
+
 
 PROJECT_ID = "project_id"
 USER_ID = "user_id"
-
-AGE_key = "age"
-YEAR_key = "year"
 
 DARK_COLOR = "gray"
 LIGHT_COLOR = "white"
 
 COOKIE_TERM = 30
 
-NEW_USER = {"name": "Dude", "age": "", "year": "", BCKG_COLOR: LIGHT_COLOR, TXT_COLOR: DARK_COLOR}
-NEW_PROJECT = {"project_name": "", "project_date": "", "project_description": ""}
+NAME_key = "name"
+AGE_key = "age"
+YEAR_key = "year"
+BCKG_COLOR = "background_color"
+TXT_COLOR = "text_color"
+
+PROJECT_NAME_key = "project_name"
+PROJECT_DATE_key = "project_date"
+PROJECT_DESCRIPTION_key = "project_description"
+
+NEW_USER = {NAME_key: "Dude", AGE_key: "", YEAR_key: "", BCKG_COLOR: LIGHT_COLOR, TXT_COLOR: DARK_COLOR}
+NEW_PROJECT = {PROJECT_NAME_key: "", PROJECT_DATE_key: "", PROJECT_DESCRIPTION_key: ""}
 
 ENDPOINT_FUNCTIONS = {
       "/hello": "get_page_hello",
@@ -58,9 +65,25 @@ ENDPOINT_REDIRECTS = {
       "/cv/projects/set_night_mode": "/cv/projects",
       "/statistics": "/statistics",
       "/statistics/set_night_mode": "/statistics",
-      "/cv/projects/editing": "cv/projects/editing",
-      "/cv/projects/editing/add": "cv/projects/editing",
-      "/cv/projects/editing/edit": "cv/projects/editing",
-      "/cv/projects/editing/delete": "cv/projects/editing",
-      "/cv/projects/editing/set_night_mode": "cv/projects/editing"
+      "/cv/projects/editing": "/cv/projects/editing",
+      "/cv/projects/editing/add": "/cv/projects",
+      "/cv/projects/editing/edit": "/cv/projects",
+      "/cv/projects/editing/delete": "/cv/projects",
+      "/cv/projects/editing/set_night_mode": "/cv/projects/editing"
+}
+
+ENDPOINT_POST_FUNCTIONS = {
+      "/hello/save": "write_user_data",
+      "/hello/set_night_mode": "set_night_mode",
+      "/goodbye/set_night_mode": "set_night_mode",
+      "/cv/set_night_mode": "set_night_mode",
+      "/cv/job/set_night_mode": "set_night_mode",
+      "/cv/education/set_night_mode": "set_night_mode",
+      "/cv/skills/set_night_mode": "set_night_mode",
+      "/cv/projects/set_night_mode": "set_night_mode",
+      "/statistics/set_night_mode": "set_night_mode",
+      "/cv/projects/editing/add": "add_project",
+      "/cv/projects/editing/edit": "edit_project",
+      "/cv/projects/editing/delete": "remove_project",
+      "/cv/projects/editing/set_night_mode": "set_night_mode"
 }
