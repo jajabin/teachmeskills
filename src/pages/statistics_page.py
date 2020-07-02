@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 
 import src.common.errors as errors
-import src.common.night_mode as nm
 import src.common.paths as paths
 import src.common.responds as responds
 import src.utils.file_utils as fu
 import src.utils.json_utils as ju
 import src.utils.user_utils as uu
+import src.common.instances as instances
+from src.common.night_mode import set_night_mode
 
 
 def increment_page_visit(endpoint: str) -> None:
@@ -33,12 +34,13 @@ def calculate_stats(page_statistics, start_date, count_days) -> int:
 
 
 def get_page_statistics(server_inst, method: str, endpoint: str, _qs) -> None:
+    redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
     switcher = {
         "GET": show_page_statistics,
         "POST": save_page_statistics,
     }
     if method in switcher:
-        switcher[method](server_inst, endpoint, "/statistics/")
+        switcher[method](server_inst, endpoint, redirect_to)
     else:
         raise errors.MethodNotAllowed
 
@@ -76,10 +78,8 @@ def show_page_statistics(server_inst, _endpoint, _redirect_to) -> None:
 
 
 def save_page_statistics(server_inst, endpoint: str, redirect_to: str):
-    switcher = {
-        "/statistics/set_night_mode": nm.set_night_mode,
-    }
+    switcher = instances.ENDPOINT_POST_FUNCTIONS
     if endpoint in switcher:
-        switcher[endpoint](server_inst, redirect_to)
+        eval(switcher[endpoint])(server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed

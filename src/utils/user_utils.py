@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Dict
@@ -11,7 +12,7 @@ import src.utils.json_utils as ju
 
 def get_user_id(server_inst) -> str:
     cookies_content = cu.get_cookies(server_inst)
-    print(f"cookies content = {cookies_content}")
+    logging.debug(f"cookies content = {cookies_content}")
 
     return cookies_content[instances.USER_ID] if instances.USER_ID in cookies_content else str(uuid.uuid1())
 

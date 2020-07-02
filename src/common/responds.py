@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 
@@ -44,11 +45,11 @@ def send_response(
     server_inst.send_header("Content-length", len(msg))
     # server_inst.send_header("Cache-Control", f"max-age={30 * 24 * 60 * 60}")
 
-    print(f"headers = {headers}")
+    logging.debug(f"headers = {headers}")
     for header, value in headers.items():
         server_inst.send_header(header, value)
 
-    print(f"cookies = {cookie_master}")
+    logging.debug(f"cookies = {cookie_master}")
     # if cookie_master is not None:
     for cookie in cookie_master.values():
         server_inst.send_header("Set-Cookie", cookie.OutputString())

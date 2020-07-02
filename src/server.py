@@ -1,5 +1,6 @@
 import os
 import socketserver
+import logging
 from http.server import SimpleHTTPRequestHandler
 
 import src.common.errors as errors
@@ -11,8 +12,10 @@ from src.pages.hello_page import get_page_hello
 from src.pages.statistics_page import get_page_statistics
 from src.styles.css_style import get_cv_style
 
+logging.basicConfig(level=logging.DEBUG)
+
 PORT = int(os.getenv("PORT", 8000))
-print(f"PORT={PORT}")
+logging.debug(f"PORT={PORT}")
 
 
 def do(self, method: str) -> None:
@@ -71,5 +74,5 @@ class MyHandler(SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         # httpd = socketserver.TCPServer(("", PORT), MyHandler)
-        print('it works')
+        logging.debug('it works')
         httpd.serve_forever()
