@@ -49,8 +49,8 @@ ENDPOINT_FUNCTIONS = {
 
 ENDPOINT_REDIRECTS = {
       "/hello": "/hello",
-      "/hello/save": "/hello/",
-      "/hello/set_night_mode": "/hello/set_night_mode",
+      "/hello/save": "/hello",
+      "/hello/set_night_mode": "/hello",
       "/goodbye": "/goodbye",
       "/goodbye/set_night_mode": "/goodbye",
       "/cv": "/cv",

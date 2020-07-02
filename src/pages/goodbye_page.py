@@ -2,12 +2,12 @@ from datetime import datetime
 
 import src.common.errors as errors
 import src.common.instances as instances
-import src.common.night_mode as nm
 import src.common.paths as paths
 import src.common.responds as responds
 import src.pages.statistics_page as stats
 import src.utils.file_utils as fu
 import src.utils.user_utils as uu
+from src.common.night_mode import set_night_mode
 
 
 def get_page_goodbye(server_inst, method: str, endpoint: str, _qs) -> None:
@@ -34,17 +34,11 @@ def show_page_goodbye(server_inst, endpoint: str) -> None:
     responds.respond_200(server_inst, msg, "text/html")
 
 
-def get_redirect_to(endpoint: str) -> str:
-    return instances.ENDPOINT_REDIRECTS[endpoint]
-
-
 def save_page_goodbye(server_inst, endpoint: str):
-    redirect_to = get_redirect_to(endpoint)
-    switcher = {
-        "/goodbye/set_night_mode": nm.set_night_mode,
-    }
+    redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
+    switcher = instances.ENDPOINT_POST_FUNCTIONS
     if endpoint in switcher:
-        switcher[endpoint](server_inst, redirect_to)
+        eval(switcher[endpoint])(server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
 

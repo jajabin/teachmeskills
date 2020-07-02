@@ -2,13 +2,13 @@ from pathlib import Path
 
 import src.common.errors as errors
 import src.common.instances as instances
-import src.common.night_mode as nm
 import src.common.paths as paths
 import src.common.responds as responds
 import src.pages.statistics_page as stats
 import src.utils.file_utils as fu
 import src.utils.json_utils as ju
 import src.utils.user_utils as uu
+from src.common.night_mode import set_night_mode
 
 
 def get_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
@@ -85,10 +85,6 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
     responds.respond_200(server_inst, msg, "text/html")
 
 
-def get_redirect_to(endpoint: str) -> str:
-    return instances.ENDPOINT_REDIRECTS[endpoint]
-
-
 def save_page_cv(server_inst, endpoint: str, file_content: Path, _file_html) -> None:
     """
     save some settings
@@ -99,21 +95,11 @@ def save_page_cv(server_inst, endpoint: str, file_content: Path, _file_html) -> 
     :return: nothing
     """
 
-    redirect_to = get_redirect_to(endpoint)
+    redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
 
-    switcher = {
-        "/cv/set_night_mode": nm.set_night_mode,
-        "/cv/job/set_night_mode": nm.set_night_mode,
-        "/cv/education/set_night_mode": nm.set_night_mode,
-        "/cv/skills/set_night_mode": nm.set_night_mode,
-        "/cv/projects/set_night_mode": nm.set_night_mode,
-        "/cv/projects/editing/add": add_project,
-        "/cv/projects/editing/edit": edit_project,
-        "/cv/projects/editing/delete": remove_project,
-        "/cv/projects/editing/set_night_mode": nm.set_night_mode,
-    }
+    switcher = instances.ENDPOINT_POST_FUNCTIONS
     if endpoint in switcher:
-        switcher[endpoint](server_inst, redirect_to, file_content)
+        eval(switcher[endpoint])(server_inst, redirect_to, file_content)
     else:
         raise errors.MethodNotAllowed
 
