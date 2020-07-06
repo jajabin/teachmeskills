@@ -1,4 +1,9 @@
+import logging
+import os
+import re
+import uuid
 from pathlib import Path
+from typing import Tuple
 
 import src.common.errors as errors
 import src.common.instances as instances
@@ -9,6 +14,47 @@ import src.utils.file_utils as fu
 import src.utils.json_utils as ju
 import src.utils.user_utils as uu
 from src.common.night_mode import set_night_mode
+
+
+def handler_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
+    switcher = {
+        r"^/cv$": get_page_cv,
+        r"^/cv\/job$": get_page_cv_job,
+        r"^/cv\/skills$": get_page_cv_skills,
+        r"^/cv\/education$": get_page_cv_education,
+        r"^/cv\/projects$": get_page_cv_projects,
+        r"^\/cv\/projects\/editing": get_page_projects_editing,
+        r"^/cv\/project\/(\w+)\/(\w+)": get_page_cv_project,
+    }
+    handler, kwargs = parse_endpoint(switcher, endpoint)
+    print(f"handler = {handler}")
+    print(f"kwargs = {kwargs}")
+    print(f"endpoint = {endpoint}")
+    try:
+        handler(server_inst, method, endpoint, "")
+    except (FileNotFoundError, errors.PageNotFoundError):
+        responds.respond_404(server_inst)
+    except errors.MethodNotAllowed:
+        responds.respond_405(server_inst)
+
+
+def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
+    function = None
+    kwargs = {}
+
+    for path, funct in endpoints_dict.items():
+        match = re.match(path, endpoint)
+        if not match:
+            continue
+
+        function = funct
+        kwargs = match.groupdict().copy()
+        break
+
+    if not function:
+        raise errors.UnknownPath(endpoint)
+
+    return function, kwargs
 
 
 def get_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
@@ -34,6 +80,11 @@ def get_page_cv_projects(server_inst, method: str, endpoint: str, _qs) -> None:
 def get_page_projects_editing(server_inst, method: str, endpoint: str, _qs) -> None:
     get_page(server_inst, method, endpoint, paths.CV_PROJECTS_JSON,
              paths.CV_PROJECTS_EDITING_HTML)
+
+
+def get_page_cv_project(server_inst, method: str, endpoint: str, _qs) -> None:
+    get_page(server_inst, method, endpoint, paths.CV_PROJECTS_JSON,
+             paths.CV_PROJECT_HTML)
 
 
 def get_page(server_inst, method: str, endpoint: str, file_content: Path, file_html: Path) -> None:
@@ -71,9 +122,20 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
     projects = ""
     if endpoint == "/cv/projects":
         for project in page_content:
-            projects += "<h3>" + page_content[project]["project_name"] + f" (id: {project})" + "</h3>"
+            projects += "<h3>" + page_content[project][
+                "project_name"] + f" (id: {project})     " + "<a href=/cv/project/" + project + "/editing>Edit</a>" + "</h3>"
             projects += "<p>" + page_content[project]["project_date"] + "</p>"
             projects += "<p>" + page_content[project]["project_description"] + "</p>"
+    if endpoint.startswith("/cv/project/"):
+        print(endpoint)
+        result = re.search("^/cv\/project\/(\w+)\/(\w+)", endpoint)
+        print(result)
+        if result[1] in page_content:
+            print(result[1])
+            projects += "<h3>" + page_content[result[1]]["project_name"] + f" (id: {result[1]})" + "</h3>"
+            projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
+            projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
+    print(projects)
 
     msg = fu.get_file_contents(paths.HEADER_HTML)
     msg += fu.get_file_contents(file_html) \
@@ -97,15 +159,25 @@ def save_page_cv(server_inst, endpoint: str, file_content: Path, _file_html) -> 
 
     redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
 
-    switcher = instances.ENDPOINT_POST_FUNCTIONS
+    switcher = {
+        "/cv/set_night_mode": set_night_mode,
+        "/cv/job/set_night_mode": set_night_mode,
+        "/cv/education/set_night_mode": set_night_mode,
+        "/cv/skills/set_night_mode": set_night_mode,
+        "/cv/projects/set_night_mode": set_night_mode,
+        "/cv/projects/editing/add": add_project,
+        "/cv/projects/editing/edit": edit_project,
+        "/cv/projects/editing/delete": remove_project,
+        "/cv/projects/editing/set_night_mode": set_night_mode
+    }
     if endpoint in switcher:
-        eval(switcher[endpoint])(server_inst, redirect_to, file_content)
+        switcher[endpoint](server_inst, redirect_to, file_content)
     else:
         raise errors.MethodNotAllowed
 
 
 def edit_project(server_inst, redirect_to, file_content: Path) -> None:
-    print(redirect_to)
+    logging.debug(redirect_to)
     new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
 
@@ -123,22 +195,15 @@ def edit_project(server_inst, redirect_to, file_content: Path) -> None:
 
 
 def add_project(server_inst, redirect_to, file_content: Path) -> None:
-    new_project_content = uu.parse_received_data(server_inst)
     projects_content = ju.read_json_file(file_content)
-    new_project = {}
+    new_project = instances.NEW_PROJECT
+    new_project.update(uu.parse_received_data(server_inst))
 
-    if instances.PROJECT_ID not in new_project_content:
-        responds.respond_418(server_inst)
-    if new_project_content[instances.PROJECT_ID] is projects_content:
-        responds.respond_418(server_inst)
-    id_new_project = new_project_content[instances.PROJECT_ID]
-    new_project[id_new_project] = instances.NEW_PROJECT
+    new_project_id = os.urandom(16).hex()
+    if new_project_id not in projects_content:
+        projects_content[new_project_id] = {}
 
-    for item in new_project_content:
-        if item in new_project[id_new_project]:
-            new_project[id_new_project][item] = new_project_content[item]  # dict.setdefault(key, default_value)
-
-    projects_content.update(new_project)
+    projects_content[new_project_id].update(new_project)
     ju.write_json_file(file_content, projects_content)
     responds.respond_302(server_inst, redirect_to)
 

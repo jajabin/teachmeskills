@@ -78,8 +78,10 @@ def show_page_statistics(server_inst, _endpoint, _redirect_to) -> None:
 
 
 def save_page_statistics(server_inst, endpoint: str, redirect_to: str):
-    switcher = instances.ENDPOINT_POST_FUNCTIONS
+    switcher = {
+        "/statistics/set_night_mode": set_night_mode,
+    }
     if endpoint in switcher:
-        eval(switcher[endpoint])(server_inst, redirect_to)
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed

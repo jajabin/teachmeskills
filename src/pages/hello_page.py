@@ -37,9 +37,12 @@ def show_page_hello(server_inst, endpoint: str):
 
 def save_user_data(server_inst, endpoint: str) -> None:
     redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
-    switcher = instances.ENDPOINT_POST_FUNCTIONS
+    switcher = {
+        "/hello/save": write_user_data,
+        "/hello/set_night_mode": set_night_mode,
+    }
     if endpoint in switcher:
-        eval(switcher[endpoint])(server_inst, redirect_to)
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
 

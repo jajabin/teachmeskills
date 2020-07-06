@@ -36,9 +36,11 @@ def show_page_goodbye(server_inst, endpoint: str) -> None:
 
 def save_page_goodbye(server_inst, endpoint: str):
     redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
-    switcher = instances.ENDPOINT_POST_FUNCTIONS
+    switcher = {
+      "/goodbye/set_night_mode": set_night_mode,
+}
     if endpoint in switcher:
-        eval(switcher[endpoint])(server_inst, redirect_to)
+        switcher[endpoint](server_inst, redirect_to)
     else:
         raise errors.MethodNotAllowed
 

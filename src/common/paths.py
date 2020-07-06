@@ -21,6 +21,7 @@ CV_PROJECTS_EDITING_HTML = PROJECT_DIR / "pages/cv_projects_editing.html"
 HEADER_HTML = PROJECT_DIR / "pages/header.html"
 FOOTER_HTML = PROJECT_DIR / "pages/footer.html"
 CV_LINKS_HTML = PROJECT_DIR / "pages/cv_links.html"
+CV_PROJECT_HTML = PROJECT_DIR / "pages/cv_project.html"
 
 CV_JSON = PROJECT_DIR / "contents/cv_resume.json"
 CV_EDUCATION_JSON = PROJECT_DIR / "contents/cv_education.json"

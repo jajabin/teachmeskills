@@ -14,7 +14,7 @@ def get_user_id(server_inst) -> str:
     cookies_content = cu.get_cookies(server_inst)
     logging.debug(f"cookies content = {cookies_content}")
 
-    return cookies_content[instances.USER_ID] if instances.USER_ID in cookies_content else str(uuid.uuid1())
+    return cookies_content[instances.USER_ID] if instances.USER_ID in cookies_content else str(uuid.uuid4())
 
 
 def read_user_session(user_id: str) -> Dict[str, str]:
