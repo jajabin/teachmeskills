@@ -19,25 +19,39 @@ from src.common.night_mode import set_night_mode
 def handler_page_cv(server_inst, method: str, endpoint: str, qs) -> None:
     #   regex r"cv\/projects\/(\w+)\/(\w+)"
     switcher = {
-        r"^/cv$": get_page_cv,
-        r"^/cv\/set_night_mode$": get_page_cv,
-        r"^/cv\/job$": get_page_cv_job,
-        r"^/cv\/job\/set_night_mode$": get_page_cv_job,
-        r"^/cv\/skills$": get_page_cv_skills,
-        r"^/cv\/skills\/set_night_mode$": get_page_cv_skills,
-        r"^/cv\/education$": get_page_cv_education,
-        r"^/cv\/education\/set_night_mode$": get_page_cv_education,
-        r"^/cv\/projects$": get_page_cv_projects,
-        r"^/cv\/projects\/set_night_mode$": get_page_cv_projects,
-        r"^\/cv\/projects\/editing": get_page_projects_editing,
-        r"^/cv\/projects\/editing$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/add$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/edit$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/delete$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/set_night_mode$": get_page_projects_editing,
+        #r"^/cv$": get_page_cv,
+        #r"^/cv\/set_night_mode$": get_page_cv,
+        #r"^/cv\/job$": get_page_cv_job,
+        #r"^/cv\/job\/set_night_mode$": get_page_cv_job,
+        #r"^/cv\/skills$": get_page_cv_skills,
+        #r"^/cv\/skills\/set_night_mode$": get_page_cv_skills,
+        #r"^/cv\/education$": get_page_cv_education,
+        #r"^/cv\/education\/set_night_mode$": get_page_cv_education,
+        #r"^/cv\/projects$": get_page_cv_projects,
+        #r"^/cv\/projects\/set_night_mode$": get_page_cv_projects,
+        #r"^\/cv\/projects\/editing": get_page_projects_editing,
+        #r"^/cv\/projects\/editing$": get_page_projects_editing,
+        #r"^/cv\/projects\/editing\/add$": get_page_projects_editing,
+        #r"^/cv\/projects\/editing\/edit$": get_page_projects_editing,
+        #r"^/cv\/projects\/editing\/delete$": get_page_projects_editing,
+        #r"^/cv\/projects\/editing\/set_night_mode$": get_page_projects_editing,
+        # r"^/cv\/project\/(\w+)\/set_night_mode$": get_page_cv_project,
         r"^/cv\/project\/(\w+)": get_page_cv_project,
+        r"^/cv\/project\/(\w+)\/(\w+)": get_page_cv_project,
+        r"^/cv\/projects\/editing$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/(\w+)$": get_page_projects_editing,
+        r"^/cv\/projects$": get_page_cv_projects,
+        r"^/cv\/projects\/(\w+)$": get_page_cv_projects,
+        r"^/cv\/education$": get_page_cv_education,
+        r"^/cv\/education\/(\w+)$": get_page_cv_education,
+        r"^/cv\/skills$": get_page_cv_skills,
+        r"^/cv\/skills\/(\w+)$": get_page_cv_skills,
+        r"^/cv\/job$": get_page_cv_job,
+        r"^/cv\/job\/(\w+)$": get_page_cv_job,
+        r"^/cv$": get_page_cv,
+        r"^/cv\/(\w+)$": get_page_cv,
     }
-    function, kwargs = parse_endpoint(switcher, endpoint)
+    function, _arguments = parse_endpoint(switcher, endpoint)
     try:
         function(server_inst, method, endpoint, qs)
     except (FileNotFoundError, errors.PageNotFoundError):
@@ -48,7 +62,7 @@ def handler_page_cv(server_inst, method: str, endpoint: str, qs) -> None:
 
 def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
     function = None
-    kwargs = {}
+    arguments = {}
 
     for path, func in endpoints_dict.items():
         match = re.match(path, endpoint)
@@ -56,13 +70,13 @@ def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
             continue
 
         function = func
-        kwargs = match.groupdict().copy()
+        arguments = match.groupdict().copy()
         break
 
     if not function:
         raise errors.UnknownPath(endpoint)
 
-    return function, kwargs
+    return function, arguments
 
 
 def get_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
@@ -128,6 +142,7 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
     cv_links = fu.get_file_contents(paths.CV_LINKS_HTML)
 
     projects = ""
+    formaction = ""
     if endpoint == "/cv/projects":
         for project in page_content:
             projects += "<h3>" + page_content[project][
@@ -140,9 +155,11 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
             projects += "<h3>" + page_content[result[1]]["project_name"] + f" (id: {result[1]})" + "</h3>"
             projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
             projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
+            formaction = endpoint + "/set_night_mode"
+
 
     msg = fu.get_file_contents(file_html) \
-        .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id])
+        .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], formaction=formaction)
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
 
     # cookie_master = set_cookies(server_inst, {"user_id": user_id})
@@ -160,23 +177,45 @@ def save_page_cv(server_inst, endpoint: str, file_content: Path, _file_html) -> 
     :return: nothing
     """
 
-    redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
+    #redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
+
+    # switcher = {
+    #     "/cv/set_night_mode": set_night_mode,
+    #     "/cv/job/set_night_mode": set_night_mode,
+    #     "/cv/education/set_night_mode": set_night_mode,
+    #     "/cv/skills/set_night_mode": set_night_mode,
+    #     "/cv/projects/set_night_mode": set_night_mode,
+    #     "/cv/projects/editing/add": add_project,
+    #     "/cv/projects/editing/edit": edit_project,
+    #     "/cv/projects/editing/delete": remove_project,
+    #     "/cv/projects/editing/set_night_mode": set_night_mode
+    # }
+    # if endpoint in switcher:
+    #     switcher[endpoint](server_inst, redirect_to, file_content)
+    # else:
+    #     raise errors.MethodNotAllowed
+
+    if endpoint.startswith("/cv/project/"):
+        path = endpoint.split("/") if '/' in endpoint else [endpoint, ""]
+        redirect_to = "/cv/project/" + path[3]
+    else:
+        redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
 
     switcher = {
-        "/cv/set_night_mode": set_night_mode,
-        "/cv/job/set_night_mode": set_night_mode,
-        "/cv/education/set_night_mode": set_night_mode,
-        "/cv/skills/set_night_mode": set_night_mode,
-        "/cv/projects/set_night_mode": set_night_mode,
-        "/cv/projects/editing/add": add_project,
-        "/cv/projects/editing/edit": edit_project,
-        "/cv/projects/editing/delete": remove_project,
-        "/cv/projects/editing/set_night_mode": set_night_mode
+        r"^/(\w+)\/set_night_mode": set_night_mode,
+        r"^/(\w+)\/(\w+)\/set_night_mode": set_night_mode,
+        r"^/(\w+)\/(\w+)\/(\w+)\/set_night_mode": set_night_mode,
+        r"^/(\w+)\/(\w+)\/(\w+)\/add": add_project,
+        r"^/(\w+)\/(\w+)\/(\w+)\/edit": edit_project,
+        r"^/(\w+)\/(\w+)\/(\w+)\/delete": remove_project,
     }
-    if endpoint in switcher:
-        switcher[endpoint](server_inst, redirect_to, file_content)
-    else:
-        raise errors.MethodNotAllowed
+    function, _arguments = parse_endpoint(switcher, endpoint)
+    try:
+        function(server_inst, redirect_to, file_content)
+    except (FileNotFoundError, errors.PageNotFoundError):
+        responds.respond_404(server_inst)
+    except errors.MethodNotAllowed:
+        responds.respond_405(server_inst)
 
 
 def edit_project(server_inst, redirect_to, file_content: Path) -> None:

@@ -3,7 +3,6 @@ import re
 import socketserver
 import logging
 from http.server import SimpleHTTPRequestHandler
-from typing import Dict, Tuple
 
 import src.common.errors as errors
 import src.common.responds as responds
