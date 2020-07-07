@@ -74,6 +74,8 @@ def show_page_statistics(server_inst, _endpoint, _redirect_to) -> None:
     user_session = uu.read_user_session(user_id)
 
     msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Statistics", **user_session[user_id], body=msg)
+
     responds.respond_200(server_inst, msg, "text/html")
 
 

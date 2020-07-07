@@ -141,10 +141,9 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
             projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
             projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
 
-    msg = fu.get_file_contents(paths.HEADER_HTML)
-    msg += fu.get_file_contents(file_html) \
+    msg = fu.get_file_contents(file_html) \
         .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id])
-    msg += fu.get_file_contents(paths.FOOTER_HTML)
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
 
     # cookie_master = set_cookies(server_inst, {"user_id": user_id})
     # respond_200(server_inst, msg, "text/html", cookie_master)

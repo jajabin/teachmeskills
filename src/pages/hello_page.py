@@ -28,7 +28,8 @@ def show_page_hello(server_inst, endpoint: str):
     stats.increment_page_visit(endpoint)
     user_id = uu.get_user_id(server_inst)
     user_session = uu.read_user_session(user_id)
-    msg = fu.get_file_contents(paths.HELLO_HTML).format(**user_session[user_id])
+    msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode", **user_session[user_id])
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Hello", **user_session[user_id], body=msg)
 
     # cookie_master = set_cookies(server_inst, {"user_id": user_id})
     # respond_200(server_inst, msg, "text/html", cookie_master)

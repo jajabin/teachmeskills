@@ -29,8 +29,9 @@ def show_page_goodbye(server_inst, endpoint: str) -> None:
     user_id = uu.get_user_id(server_inst)
     user_session = uu.read_user_session(user_id)
 
-    msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase,
-                                                          **user_session[user_id])  # format ???
+    msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase, **user_session[user_id])
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Goodbye", **user_session[user_id], body=msg)
+
     responds.respond_200(server_inst, msg, "text/html")
 
 
