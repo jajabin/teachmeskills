@@ -16,22 +16,30 @@ import src.utils.user_utils as uu
 from src.common.night_mode import set_night_mode
 
 
-def handler_page_cv(server_inst, method: str, endpoint: str, _qs) -> None:
+def handler_page_cv(server_inst, method: str, endpoint: str, qs) -> None:
+    #   regex r"cv\/projects\/(\w+)\/(\w+)"
     switcher = {
         r"^/cv$": get_page_cv,
+        r"^/cv\/set_night_mode$": get_page_cv,
         r"^/cv\/job$": get_page_cv_job,
+        r"^/cv\/job\/set_night_mode$": get_page_cv_job,
         r"^/cv\/skills$": get_page_cv_skills,
+        r"^/cv\/skills\/set_night_mode$": get_page_cv_skills,
         r"^/cv\/education$": get_page_cv_education,
+        r"^/cv\/education\/set_night_mode$": get_page_cv_education,
         r"^/cv\/projects$": get_page_cv_projects,
+        r"^/cv\/projects\/set_night_mode$": get_page_cv_projects,
         r"^\/cv\/projects\/editing": get_page_projects_editing,
-        r"^/cv\/project\/(\w+)\/(\w+)": get_page_cv_project,
+        r"^/cv\/projects\/editing$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/add$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/edit$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/delete$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/set_night_mode$": get_page_projects_editing,
+        r"^/cv\/project\/(\w+)": get_page_cv_project,
     }
-    handler, kwargs = parse_endpoint(switcher, endpoint)
-    print(f"handler = {handler}")
-    print(f"kwargs = {kwargs}")
-    print(f"endpoint = {endpoint}")
+    function, kwargs = parse_endpoint(switcher, endpoint)
     try:
-        handler(server_inst, method, endpoint, "")
+        function(server_inst, method, endpoint, qs)
     except (FileNotFoundError, errors.PageNotFoundError):
         responds.respond_404(server_inst)
     except errors.MethodNotAllowed:
@@ -42,12 +50,12 @@ def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
     function = None
     kwargs = {}
 
-    for path, funct in endpoints_dict.items():
+    for path, func in endpoints_dict.items():
         match = re.match(path, endpoint)
         if not match:
             continue
 
-        function = funct
+        function = func
         kwargs = match.groupdict().copy()
         break
 
@@ -123,19 +131,15 @@ def show_page_cv(server_inst, endpoint: str, file_content: str, file_html: str) 
     if endpoint == "/cv/projects":
         for project in page_content:
             projects += "<h3>" + page_content[project][
-                "project_name"] + f" (id: {project})     " + "<a href=/cv/project/" + project + "/editing>Edit</a>" + "</h3>"
+                "project_name"] + f" (id: {project})     " + "<a href=/cv/project/" + project + ">Edit</a>" + "</h3>"
             projects += "<p>" + page_content[project]["project_date"] + "</p>"
             projects += "<p>" + page_content[project]["project_description"] + "</p>"
     if endpoint.startswith("/cv/project/"):
-        print(endpoint)
-        result = re.search("^/cv\/project\/(\w+)\/(\w+)", endpoint)
-        print(result)
+        result = re.search("^/cv\/project\/(\w+)", endpoint)
         if result[1] in page_content:
-            print(result[1])
             projects += "<h3>" + page_content[result[1]]["project_name"] + f" (id: {result[1]})" + "</h3>"
             projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
             projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
-    print(projects)
 
     msg = fu.get_file_contents(paths.HEADER_HTML)
     msg += fu.get_file_contents(file_html) \

@@ -7,8 +7,7 @@ from typing import Dict, Tuple
 
 import src.common.errors as errors
 import src.common.responds as responds
-import src.common.instances as instance
-from src.pages.cv_page import get_page_cv, get_page_cv_education, get_page_cv_job, get_page_cv_projects, get_page_cv_skills, get_page_projects_editing, get_page_cv_project, handler_page_cv
+from src.pages.cv_page import handler_page_cv
 from src.pages.goodbye_page import get_page_goodbye
 from src.pages.hello_page import get_page_hello
 from src.pages.statistics_page import get_page_statistics
@@ -31,6 +30,7 @@ def do(self, method: str) -> None:
         return
 
     endpoint = endpoint.rstrip('/')
+    _, knot, *_ = endpoint.split("/") if '/' in endpoint else [endpoint, ""]
 
     # switcher = {
     #     "/hello": get_page_hello,
@@ -57,13 +57,12 @@ def do(self, method: str) -> None:
     #     "/cv/projects/editing/set_night_mode": get_page_projects_editing,
     # }
 
-    #   regex r"cv\/projects\/(\w+)\/(\w+)"
-
     switcher = {
+        "hello": get_page_hello,
+        "goodbye": get_page_goodbye,
+        "statistics": get_page_statistics,
         "cv": handler_page_cv,
     }
-
-    _, *knot = endpoint.split("/") if '/' in endpoint else [endpoint, ""]
 
     # get a page via dict.get (usable in do_GET)
     # if switcher doesn't contain endpoint, return SimpleHTTPRequestHandler function
@@ -76,8 +75,8 @@ def do(self, method: str) -> None:
     # handler()
 
     try:
-        if knot[0] in switcher:
-            switcher[knot[0]](self, method, endpoint, qs)
+        if knot in switcher:
+            switcher[knot](self, method, endpoint, qs)
         else:
             # return SimpleHTTPRequestHandler.do_GET(self)
             raise errors.PageNotFoundError
