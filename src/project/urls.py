@@ -16,6 +16,41 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from src.django_pages.cv_page import handler_page_cv
+from src.django_pages.goodbye_page import get_page_goodbye
+from src.django_pages.hello_page import get_page_hello
+from src.django_styles.css_style import get_cv_style
+from src.django_pages.statistics_page import get_page_statistics
+
+
+# optimize endpoints !!!
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('hello/cv_style.css', get_cv_style),   #not working
+    path('hello/', get_page_hello),
+    path('hello/save', get_page_hello),
+    path('hello/set_night_mode', get_page_hello),
+    path('goodbye/cv_style.css', get_cv_style),   #not working
+    path('goodbye/', get_page_goodbye),
+    path('goodbye/set_night_mode', get_page_goodbye),
+    path('statistics/cv_style.css', get_cv_style),  # not working
+    path('statistics/', get_page_statistics),
+    path('statistics/set_night_mode', get_page_statistics),
+    path('cv/', handler_page_cv),
+    path('cv/set_night_mode', handler_page_cv),
+    path('cv/job/', handler_page_cv),
+    path('cv/job/set_night_mode', handler_page_cv),
+    path('cv/skills/', handler_page_cv),
+    path('cv/skills/set_night_mode', handler_page_cv),
+    path('cv/education/', handler_page_cv),
+    path('cv/education/set_night_mode', handler_page_cv),
+    path('cv/projects/', handler_page_cv),
+    path('cv/projects/set_night_mode', handler_page_cv),
+    path('cv/projects/editing/', handler_page_cv),
+    path('cv/projects/editing/set_night_mode', handler_page_cv),
+    path('cv/projects/editing/add', handler_page_cv),
+    path('cv/projects/editing/edit', handler_page_cv),
+    path('cv/projects/editing/delete', handler_page_cv),
+    path('cv/project/', handler_page_cv),
+    path('cv/project/set_night_mode', handler_page_cv),
 ]
