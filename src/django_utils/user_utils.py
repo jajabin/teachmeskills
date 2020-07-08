@@ -4,10 +4,10 @@ from datetime import datetime
 from typing import Dict
 from urllib.parse import parse_qs
 
-import src.common.instances as instances
-import src.common.paths as paths
-import src.utils.cookies_utils as cu
-import src.utils.json_utils as ju
+import src.django_common.instances as instances
+import src.django_common.paths as paths
+import src.django_utils.cookies_utils as cu
+import src.django_utils.json_utils as ju
 
 
 def get_user_id(request) -> str:
@@ -31,8 +31,6 @@ def read_user_session(user_id: str) -> Dict[str, str]:
             current_user[user_id][instances.YEAR_key] = str(today - age)
     else:
         current_user[user_id] = create_new_user_session()
-        # user_data.update(current_user_session)
-        # update_json_file(user_data, paths.USER_SESSIONS)
 
     return current_user
 

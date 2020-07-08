@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 
 from src.django_pages.cv_page import handler_page_cv
 from src.django_pages.goodbye_page import get_page_goodbye
@@ -26,14 +26,12 @@ from src.django_pages.statistics_page import get_page_statistics
 # optimize endpoints !!!
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('hello/cv_style.css', get_cv_style),   #not working
+    path('cv_style.css', get_cv_style),
     path('hello/', get_page_hello),
     path('hello/save', get_page_hello),
     path('hello/set_night_mode', get_page_hello),
-    path('goodbye/cv_style.css', get_cv_style),   #not working
     path('goodbye/', get_page_goodbye),
     path('goodbye/set_night_mode', get_page_goodbye),
-    path('statistics/cv_style.css', get_cv_style),  # not working
     path('statistics/', get_page_statistics),
     path('statistics/set_night_mode', get_page_statistics),
     path('cv/', handler_page_cv),
@@ -52,5 +50,7 @@ urlpatterns = [
     path('cv/projects/editing/edit', handler_page_cv),
     path('cv/projects/editing/delete', handler_page_cv),
     path('cv/project/', handler_page_cv),
-    path('cv/project/set_night_mode', handler_page_cv),
+    path('cv/project/<str:project_id>/', handler_page_cv),
+    path('cv/project/<str:project_id>/set_night_mode', handler_page_cv),
+    #re_path(r"^/cv\/project\/<str:project_id>\/(\w+)", handler_page_cv),
 ]

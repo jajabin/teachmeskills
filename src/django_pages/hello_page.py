@@ -72,6 +72,8 @@ def write_user_data(request, redirect_to) -> HttpResponse:
     user_data[user_id].update(new_user)
 
     ju.update_json_file(user_data, paths.USER_SESSIONS)
-    #cookie_master = cu.set_cookies(server_inst, {instances.USER_ID: user_id})
 
-    return HttpResponseRedirect(redirect_to)         #set cookies
+    response = HttpResponseRedirect(redirect_to)
+    response.set_cookie(instances.USER_ID, user_id, max_age=None)
+    response.status_code = 302
+    return response

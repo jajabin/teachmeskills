@@ -19,44 +19,28 @@ import src.django_utils.user_utils as uu
 from src.django_common.night_mode import set_night_mode
 
 
-def handler_page_cv(request) -> HttpResponse:
+@csrf_exempt
+def handler_page_cv(request, **kwargs) -> HttpResponse:
     print(f"request = {request}")
     print(f"request.POST = {request.POST.get}")
     print(f"request.body = {request.body}")
 
-    #   regex r"cv\/projects\/(\w+)\/(\w+)"
     switcher = {
-        #r"^/cv$": get_page_cv,
-        #r"^/cv\/set_night_mode$": get_page_cv,
-        #r"^/cv\/job$": get_page_cv_job,
-        #r"^/cv\/job\/set_night_mode$": get_page_cv_job,
-        #r"^/cv\/skills$": get_page_cv_skills,
-        #r"^/cv\/skills\/set_night_mode$": get_page_cv_skills,
-        #r"^/cv\/education$": get_page_cv_education,
-        #r"^/cv\/education\/set_night_mode$": get_page_cv_education,
-        #r"^/cv\/projects$": get_page_cv_projects,
-        #r"^/cv\/projects\/set_night_mode$": get_page_cv_projects,
-        #r"^\/cv\/projects\/editing": get_page_projects_editing,
-        #r"^/cv\/projects\/editing$": get_page_projects_editing,
-        #r"^/cv\/projects\/editing\/add$": get_page_projects_editing,
-        #r"^/cv\/projects\/editing\/edit$": get_page_projects_editing,
-        #r"^/cv\/projects\/editing\/delete$": get_page_projects_editing,
-        #r"^/cv\/projects\/editing\/set_night_mode$": get_page_projects_editing,
-        # r"^/cv\/project\/(\w+)\/set_night_mode$": get_page_cv_project,
-        r"^/cv\/project\/(\w+)/": get_page_cv_project,
-        r"^/cv\/project\/(\w+)\/(\w+)/": get_page_cv_project,
+        r"^/cv\/project\/<str:project_id>\/\/(\w+)": get_page_cv_project,
+        r"^/cv\/project\/<str:project_id>/": get_page_cv_project,
+        r"^/cv\/project\/(\w+)/$": get_page_cv_project,
         r"^/cv\/projects\/editing/$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/(\w+)/$": get_page_projects_editing,
+        r"^/cv\/projects\/editing\/(\w+)$": get_page_projects_editing,
         r"^/cv\/projects/$": get_page_cv_projects,
-        r"^/cv\/projects\/(\w+)/$": get_page_cv_projects,
+        r"^/cv\/projects\/(\w+)$": get_page_cv_projects,
         r"^/cv\/education/$": get_page_cv_education,
-        r"^/cv\/education\/(\w+)/$": get_page_cv_education,
+        r"^/cv\/education\/(\w+)$": get_page_cv_education,
         r"^/cv\/skills/$": get_page_cv_skills,
-        r"^/cv\/skills\/(\w+)/$": get_page_cv_skills,
+        r"^/cv\/skills\/(\w+)$": get_page_cv_skills,
         r"^/cv\/job/$": get_page_cv_job,
-        r"^/cv\/job\/(\w+)/$": get_page_cv_job,
+        r"^/cv\/job\/(\w+)$": get_page_cv_job,
         r"^/cv/$": get_page_cv,
-        r"^/cv\/(\w+)/$": get_page_cv,
+        r"^/cv\/(\w+)": get_page_cv,
     }
     function, _arguments = parse_endpoint(switcher, request.path)
     try:
@@ -126,11 +110,10 @@ def get_page(request, file_content: Path, file_html: Path) -> HttpResponse:
         raise errors.MethodNotAllowed
 
 
-@csrf_exempt
 def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> HttpResponse:
     """
     show a page
-    :param server_inst: server instance
+    :param request: server instance
     :param endpoint: current endpoint
     :param file_content: text content
     :param file_html: html code
@@ -157,12 +140,12 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> H
             projects += "<p>" + page_content[project]["project_date"] + "</p>"
             projects += "<p>" + page_content[project]["project_description"] + "</p>"
     if endpoint.startswith("/cv/project/"):
-        result = re.search("^/cv\/project\/(\w+)/", endpoint)
+        result = re.search("^/cv\/project\/(\w+)", endpoint)
         if result[1] in page_content:
             projects += "<h3>" + page_content[result[1]]["project_name"] + f" (id: {result[1]})" + "</h3>"
             projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
             projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
-            formaction = endpoint + "/set_night_mode"
+            formaction = endpoint + "set_night_mode"
 
 
     msg = fu.get_file_contents(file_html) \
@@ -176,7 +159,7 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> H
 def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> HttpResponse:
     """
     save some settings
-    :param server_inst: server instance
+    :param request: server instance
     :param endpoint: current endpoint
     :param file_content: text content (for projects editing)
     :param _file_html: not used
@@ -188,6 +171,8 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> Http
         redirect_to = "/cv/project/" + path[3]
     else:
         redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
+
+    print(f"redirect_to = {redirect_to}")
 
     switcher = {
         r"^/(\w+)\/set_night_mode": set_night_mode,
@@ -208,7 +193,12 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> Http
 
 def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
     logging.debug(redirect_to)
-    new_project_content = uu.parse_received_data(request)
+    new_project_content = instances.NEW_PROJECT
+    new_project_content[instances.PROJECT_ID] = request.POST.get(instances.PROJECT_ID, "")
+    new_project_content[instances.PROJECT_NAME_key] = request.POST.get(instances.PROJECT_NAME_key, "")
+    new_project_content[instances.PROJECT_DATE_key] = request.POST.get(instances.PROJECT_DATE_key, "")
+    new_project_content[instances.PROJECT_DESCRIPTION_key] = request.POST.get(instances.PROJECT_DESCRIPTION_key, "")
+
     projects_content = ju.read_json_file(file_content)
 
     if instances.PROJECT_ID not in new_project_content:
@@ -227,7 +217,9 @@ def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
 def add_project(request, redirect_to, file_content: Path) -> None:
     projects_content = ju.read_json_file(file_content)
     new_project = instances.NEW_PROJECT
-    new_project.update(uu.parse_received_data(request))
+    new_project[instances.PROJECT_NAME_key] = request.POST.get(instances.PROJECT_NAME_key, "")
+    new_project[instances.PROJECT_DATE_key] = request.POST.get(instances.PROJECT_DATE_key, "")
+    new_project[instances.PROJECT_DESCRIPTION_key] = request.POST.get(instances.PROJECT_DESCRIPTION_key, "")
 
     new_project_id = os.urandom(16).hex()
     if new_project_id not in projects_content:
@@ -239,7 +231,9 @@ def add_project(request, redirect_to, file_content: Path) -> None:
 
 
 def remove_project(request, redirect_to, file_content: Path) -> None:
-    new_project_content = uu.parse_received_data(request)
+    new_project_content = instances.NEW_PROJECT
+    new_project_content[instances.PROJECT_ID] = request.POST.get(instances.PROJECT_ID, "")
+
     projects_content = ju.read_json_file(file_content)
 
     if instances.PROJECT_ID not in new_project_content:

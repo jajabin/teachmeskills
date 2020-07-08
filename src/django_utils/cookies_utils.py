@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from http import cookies
 from typing import Dict
 
-import src.common.instances as instance
+import src.django_common.instances as instance
 
 
 def get_cookies(server_inst) -> Dict[str, str]:
