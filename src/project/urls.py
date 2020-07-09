@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
+import logging
 
-from src.django_pages.cv_page import handler_page_cv
-from src.django_pages.goodbye_page import get_page_goodbye
-from src.django_pages.hello_page import get_page_hello
-from src.django_styles.css_style import get_cv_style
-from src.django_pages.statistics_page import get_page_statistics
+from src.pages.cv_page import handler_page_cv
+from src.pages.goodbye_page import get_page_goodbye
+from src.pages.hello_page import get_page_hello
+from src.styles.css_style import get_cv_style
+from src.pages.statistics_page import get_page_statistics
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 # optimize endpoints !!!

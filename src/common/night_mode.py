@@ -3,12 +3,10 @@ from typing import Dict
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 
-import src.django_common.instances as instances
-import src.django_common.paths as paths
-import src.django_common.responds as responds
-import src.django_utils.cookies_utils as cu
-import src.django_utils.json_utils as ju
-import src.django_utils.user_utils as uu
+import src.common.instances as instances
+import src.common.paths as paths
+import src.utils.json_utils as ju
+import src.utils.user_utils as uu
 
 
 @csrf_exempt

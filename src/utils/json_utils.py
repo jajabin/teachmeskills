@@ -9,7 +9,7 @@ def update_json_file(user_data, file: str):
 
 
 def read_json_file(file: str) -> Dict:
-    try:                                                # Зачем try ?????
+    try:  # Зачем try ?????
         with file.open("r", encoding="utf-8") as usf:
             return json.load(usf)  # what does load?
     except (json.JSONDecodeError, FileNotFoundError):

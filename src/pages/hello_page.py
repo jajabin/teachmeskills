@@ -1,27 +1,27 @@
+import logging
 import uuid
 from datetime import datetime
 
 from django.http import HttpResponse, HttpResponseRedirect
 
-import src.django_common.errors as errors
-import src.django_common.instances as instances
-import src.django_common.paths as paths
-import src.django_common.responds as responds
-import src.django_pages.statistics_page as stats
-import src.django_utils.cookies_utils as cu
-import src.django_utils.file_utils as fu
-import src.django_utils.json_utils as ju
-import src.django_utils.user_utils as uu
-from src.django_common.night_mode import set_night_mode
+import src.common.errors as errors
+import src.common.instances as instances
+import src.common.paths as paths
+import src.common.responds as responds
+import src.pages.statistics_page as stats
+import src.utils.file_utils as fu
+import src.utils.json_utils as ju
+import src.utils.user_utils as uu
+from src.common.night_mode import set_night_mode
 
 from django.views.decorators.csrf import csrf_exempt
 
 
 @csrf_exempt    # what is it ????
 def get_page_hello(request) -> HttpResponse:
-    print(f"request = {request}")
-    print(f"request.POST = {request.POST.get}")
-    print(f"request.body = {request.body}")
+    logging.debug(f"request = {request}")
+    logging.debug(f"request.POST = {request.POST.get}")
+    logging.debug(f"request.body = {request.body}")
     switcher = {
         "GET": show_page_hello,
         "POST": save_user_data,
@@ -56,9 +56,7 @@ def save_user_data(request) -> HttpResponse:
 
 def write_user_data(request, redirect_to) -> HttpResponse:
     user_data = ju.read_json_file(paths.USER_SESSIONS)
-    new_user = instances.NEW_USER
-    new_user[instances.NAME_key] = request.POST.get(instances.NAME_key, "Dude")
-    new_user[instances.AGE_key] = request.POST.get(instances.AGE_key, "")
+    new_user = uu.parse_received_data(request)
 
     if new_user[instances.AGE_key]:
         today = datetime.today().year
@@ -70,10 +68,6 @@ def write_user_data(request, redirect_to) -> HttpResponse:
         user_data[user_id] = {}
 
     user_data[user_id].update(new_user)
-
     ju.update_json_file(user_data, paths.USER_SESSIONS)
 
-    response = HttpResponseRedirect(redirect_to)
-    response.set_cookie(instances.USER_ID, user_id, max_age=None)
-    response.status_code = 302
-    return response
+    return responds.respond_302(request, redirect_to, user_id)

@@ -1,6 +1,6 @@
-import src.django_common.paths as paths
-import src.django_common.responds as responds
-import src.django_utils.file_utils as fu
+import src.common.paths as paths
+import src.common.responds as responds
+import src.utils.file_utils as fu
 
 from django.http import HttpResponse
 

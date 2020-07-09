@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import src.django_common.errors as errors
-import src.django_common.paths as paths
-import src.django_common.responds as responds
-import src.django_utils.file_utils as fu
-import src.django_utils.json_utils as ju
-import src.django_utils.user_utils as uu
-import src.django_common.instances as instances
-from src.django_common.night_mode import set_night_mode
+import src.common.errors as errors
+import src.common.paths as paths
+import src.common.responds as responds
+import src.utils.file_utils as fu
+import src.utils.json_utils as ju
+import src.utils.user_utils as uu
+import src.common.instances as instances
+from src.common.night_mode import set_night_mode
 
 
 def increment_page_visit(endpoint: str) -> None:

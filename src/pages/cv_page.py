@@ -8,15 +8,15 @@ from typing import Tuple
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 
-import src.django_common.errors as errors
-import src.django_common.instances as instances
-import src.django_common.paths as paths
-import src.django_common.responds as responds
-import src.django_pages.statistics_page as stats
-import src.django_utils.file_utils as fu
-import src.django_utils.json_utils as ju
-import src.django_utils.user_utils as uu
-from src.django_common.night_mode import set_night_mode
+import src.common.errors as errors
+import src.common.instances as instances
+import src.common.paths as paths
+import src.common.responds as responds
+import src.pages.statistics_page as stats
+import src.utils.file_utils as fu
+import src.utils.json_utils as ju
+import src.utils.user_utils as uu
+from src.common.night_mode import set_night_mode
 
 
 @csrf_exempt

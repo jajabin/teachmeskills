@@ -4,6 +4,14 @@ from typing import Dict
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
+from src.common import instances
+
+
+def respond_200(request, msg) -> HttpResponse:
+    response = render(request, msg)
+    response.status_code = 200
+    return response
+
 
 def respond_404(request) -> HttpResponse:
     msg = "Error 404: File not found"
@@ -26,10 +34,9 @@ def respond_418(request) -> HttpResponse:
     return response
 
 
-def respond_302(request, redirect_to, cookies_content) -> HttpResponse:
+def respond_302(request, redirect_to, user_id) -> HttpResponse:
     response = HttpResponseRedirect(redirect_to)
-    for name, value in cookies_content.items():
-        response.set_cookie(cookies_content[name], cookies_content[value], max_age=None)
+    response.set_cookie(instances.USER_ID, user_id, max_age=None)
     response.status_code = 302
     return response
 
