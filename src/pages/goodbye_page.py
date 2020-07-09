@@ -42,7 +42,7 @@ def show_page_goodbye(request) -> HttpResponse:
 def save_page_goodbye(request) -> HttpResponse:
     redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
     switcher = {
-      "/goodbye/set_night_mode": set_night_mode,
+      "/goodbye/set_night_mode/": set_night_mode,
     }
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)

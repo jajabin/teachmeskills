@@ -85,7 +85,7 @@ def show_page_statistics(request) -> HttpResponse:
 def save_page_statistics(request) -> HttpResponse:
     redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
     switcher = {
-        "/statistics/set_night_mode": set_night_mode,
+        "/statistics/set_night_mode/": set_night_mode,
     }
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)

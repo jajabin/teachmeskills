@@ -95,6 +95,7 @@ def get_page_projects_editing(request, **kwargs) -> HttpResponse:
 
 
 def get_page_cv_project(request, **kwargs) -> HttpResponse:
+    print(kwargs)
     return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML, **kwargs)
 
 
@@ -145,7 +146,7 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str, **kw
             projects += "<h3>" + page_content[project_id]["project_name"] + f" (id: {project_id})" + "</h3>"
             projects += "<p>" + page_content[project_id]["project_date"] + "</p>"
             projects += "<p>" + page_content[project_id]["project_description"] + "</p>"
-            formaction = endpoint + "set_night_mode"
+            formaction = endpoint + "set_night_mode/"
 
 
     msg = fu.get_file_contents(file_html) \
@@ -174,7 +175,7 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwarg
     logging.debug(f"redirect_to = {redirect_to}")
 
     switcher = {
-        r"^/(.+)\/set_night_mode": set_night_mode,
+        r"^/(.+)\/set_night_mode/": set_night_mode,
         r"^/(.+)\/delete": remove_project,
         r"^/(.+)\/add": add_project,
         r"^/(.+)\/edit": edit_project,

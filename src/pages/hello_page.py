@@ -37,7 +37,7 @@ def show_page_hello(request) -> HttpResponse:
     stats.increment_page_visit(request.path)
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
-    msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode", **user_session[user_id])
+    msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode/", **user_session[user_id])
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Hello", **user_session[user_id], body=msg)
 
     return responds.respond_200(msg)
@@ -47,7 +47,7 @@ def save_user_data(request) -> HttpResponse:
     redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
     switcher = {
         "/hello/save": write_user_data,
-        "/hello/set_night_mode": set_night_mode,
+        "/hello/set_night_mode/": set_night_mode,
     }
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)
