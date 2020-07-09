@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, re_path
 import logging
 
+from requests import models
+
 from src.pages.cv_page import handler_page_cv
 from src.pages.goodbye_page import get_page_goodbye
 from src.pages.hello_page import get_page_hello
@@ -29,6 +31,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # optimize endpoints !!!
 urlpatterns = [
+    # re_path(r"cv\/project/(.+)\/", handler_page_cv),
     path('admin/', admin.site.urls),
     path('cv_style.css', get_cv_style),
     path('hello/', get_page_hello),
@@ -56,5 +59,4 @@ urlpatterns = [
     path('cv/project/', handler_page_cv),
     path('cv/project/<str:project_id>/', handler_page_cv),
     path('cv/project/<str:project_id>/set_night_mode', handler_page_cv),
-    #re_path(r"^/cv\/project\/<str:project_id>\/(\w+)", handler_page_cv),
 ]

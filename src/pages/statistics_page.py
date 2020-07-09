@@ -79,7 +79,7 @@ def show_page_statistics(request) -> HttpResponse:
     msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Statistics", **user_session[user_id], body=msg)
 
-    return HttpResponse(msg)
+    return responds.respond_200(request, msg)
 
 
 def save_page_statistics(request) -> HttpResponse:

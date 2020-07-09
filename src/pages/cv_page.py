@@ -21,9 +21,9 @@ from src.common.night_mode import set_night_mode
 
 @csrf_exempt
 def handler_page_cv(request, **kwargs) -> HttpResponse:
-    print(f"request = {request}")
-    print(f"request.POST = {request.POST.get}")
-    print(f"request.body = {request.body}")
+    logging.debug(f"request = {request}")
+    logging.debug(f"request.POST = {request.POST.get}")
+    logging.debug(f"request.body = {request.body}")
 
     switcher = {
         r"^/cv\/project\/<str:project_id>\/\/(\w+)": get_page_cv_project,
@@ -44,7 +44,7 @@ def handler_page_cv(request, **kwargs) -> HttpResponse:
     }
     function, _arguments = parse_endpoint(switcher, request.path)
     try:
-        return function(request)
+        return function(request, **kwargs)
     except (FileNotFoundError, errors.PageNotFoundError):
         return responds.respond_404(request)
     except errors.MethodNotAllowed:
@@ -70,47 +70,47 @@ def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
     return function, arguments
 
 
-def get_page_cv(request) -> HttpResponse:
-    return get_page(request, None, paths.CV_HTML)
+def get_page_cv(request, **kwargs) -> HttpResponse:
+    return get_page(request, None, paths.CV_HTML, **kwargs)
 
 
-def get_page_cv_education(request) -> HttpResponse:
-    return get_page(request, paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML)
+def get_page_cv_education(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML, **kwargs)
 
 
-def get_page_cv_job(request) -> HttpResponse:
-    return get_page(request, paths.CV_JOB_JSON, paths.CV_JOB_HTML)
+def get_page_cv_job(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_JOB_JSON, paths.CV_JOB_HTML, **kwargs)
 
 
-def get_page_cv_skills(request) -> HttpResponse:
-    return get_page(request, paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML)
+def get_page_cv_skills(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML, **kwargs)
 
 
-def get_page_cv_projects(request) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML)
+def get_page_cv_projects(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML, **kwargs)
 
 
-def get_page_projects_editing(request) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML)
+def get_page_projects_editing(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML, **kwargs)
 
 
-def get_page_cv_project(request) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML)
+def get_page_cv_project(request, **kwargs) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML, **kwargs)
 
 
 @csrf_exempt
-def get_page(request, file_content: Path, file_html: Path) -> HttpResponse:
+def get_page(request, file_content: Path, file_html: Path, **kwargs) -> HttpResponse:
     switcher = {
         "GET": show_page_cv,
         "POST": save_page_cv,
     }
     if request.method in switcher:
-        return switcher[request.method](request, request.path, file_content, file_html)
+        return switcher[request.method](request, request.path, file_content, file_html, **kwargs)
     else:
         raise errors.MethodNotAllowed
 
 
-def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> HttpResponse:
+def show_page_cv(request, endpoint: str, file_content: str, file_html: str, **kwargs) -> HttpResponse:
     """
     show a page
     :param request: server instance
@@ -140,11 +140,11 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> H
             projects += "<p>" + page_content[project]["project_date"] + "</p>"
             projects += "<p>" + page_content[project]["project_description"] + "</p>"
     if endpoint.startswith("/cv/project/"):
-        result = re.search("^/cv\/project\/(\w+)", endpoint)
-        if result[1] in page_content:
-            projects += "<h3>" + page_content[result[1]]["project_name"] + f" (id: {result[1]})" + "</h3>"
-            projects += "<p>" + page_content[result[1]]["project_date"] + "</p>"
-            projects += "<p>" + page_content[result[1]]["project_description"] + "</p>"
+        project_id = kwargs[instances.PROJECT_ID]
+        if project_id in page_content:
+            projects += "<h3>" + page_content[project_id]["project_name"] + f" (id: {project_id})" + "</h3>"
+            projects += "<p>" + page_content[project_id]["project_date"] + "</p>"
+            projects += "<p>" + page_content[project_id]["project_description"] + "</p>"
             formaction = endpoint + "set_night_mode"
 
 
@@ -152,11 +152,11 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str) -> H
         .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], formaction=formaction)
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
 
-    return HttpResponse(msg)
+    return responds.respond_200(request, msg)
 
 
 @csrf_exempt
-def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> HttpResponse:
+def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwargs) -> HttpResponse:
     """
     save some settings
     :param request: server instance
@@ -167,20 +167,17 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> Http
     """
 
     if endpoint.startswith("/cv/project/"):
-        path = endpoint.split("/") if '/' in endpoint else [endpoint, ""]
-        redirect_to = "/cv/project/" + path[3]
+        redirect_to = "/cv/project/" + kwargs[instances.PROJECT_ID]
     else:
         redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
 
-    print(f"redirect_to = {redirect_to}")
+    logging.debug(f"redirect_to = {redirect_to}")
 
     switcher = {
-        r"^/(\w+)\/set_night_mode": set_night_mode,
-        r"^/(\w+)\/(\w+)\/set_night_mode": set_night_mode,
-        r"^/(\w+)\/(\w+)\/(\w+)\/set_night_mode": set_night_mode,
-        r"^/(\w+)\/(\w+)\/(\w+)\/add": add_project,
-        r"^/(\w+)\/(\w+)\/(\w+)\/edit": edit_project,
-        r"^/(\w+)\/(\w+)\/(\w+)\/delete": remove_project,
+        r"^/(.+)\/set_night_mode": set_night_mode,
+        r"^/(.+)\/delete": remove_project,
+        r"^/(.+)\/add": add_project,
+        r"^/(.+)\/edit": edit_project,
     }
     function, _arguments = parse_endpoint(switcher, endpoint)
     try:
@@ -193,11 +190,8 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html) -> Http
 
 def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
     logging.debug(redirect_to)
-    new_project_content = instances.NEW_PROJECT
-    new_project_content[instances.PROJECT_ID] = request.POST.get(instances.PROJECT_ID, "")
-    new_project_content[instances.PROJECT_NAME_key] = request.POST.get(instances.PROJECT_NAME_key, "")
-    new_project_content[instances.PROJECT_DATE_key] = request.POST.get(instances.PROJECT_DATE_key, "")
-    new_project_content[instances.PROJECT_DESCRIPTION_key] = request.POST.get(instances.PROJECT_DESCRIPTION_key, "")
+    new_project_content = instances.NEW_PROJECT.copy()
+    new_project_content.update(uu.parse_received_data(request))
 
     projects_content = ju.read_json_file(file_content)
 
@@ -214,12 +208,10 @@ def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
     return HttpResponseRedirect(redirect_to)
 
 
-def add_project(request, redirect_to, file_content: Path) -> None:
+def add_project(request, redirect_to, file_content: Path) -> HttpResponse:
     projects_content = ju.read_json_file(file_content)
-    new_project = instances.NEW_PROJECT
-    new_project[instances.PROJECT_NAME_key] = request.POST.get(instances.PROJECT_NAME_key, "")
-    new_project[instances.PROJECT_DATE_key] = request.POST.get(instances.PROJECT_DATE_key, "")
-    new_project[instances.PROJECT_DESCRIPTION_key] = request.POST.get(instances.PROJECT_DESCRIPTION_key, "")
+    new_project = instances.NEW_PROJECT.copy()
+    new_project.update(uu.parse_received_data(request))
 
     new_project_id = os.urandom(16).hex()
     if new_project_id not in projects_content:
@@ -230,18 +222,17 @@ def add_project(request, redirect_to, file_content: Path) -> None:
     return HttpResponseRedirect(redirect_to)
 
 
-def remove_project(request, redirect_to, file_content: Path) -> None:
-    new_project_content = instances.NEW_PROJECT
-    new_project_content[instances.PROJECT_ID] = request.POST.get(instances.PROJECT_ID, "")
+def remove_project(request, redirect_to, file_content: Path) -> HttpResponse:
+    project_content = instances.NEW_PROJECT.copy()
+    project_content.update(uu.parse_received_data(request))
 
     projects_content = ju.read_json_file(file_content)
 
-    if instances.PROJECT_ID not in new_project_content:
+    if instances.PROJECT_ID not in project_content:
         return responds.respond_418(request)
-    if new_project_content[instances.PROJECT_ID] not in projects_content:
+    if project_content[instances.PROJECT_ID] not in projects_content:
         return responds.respond_418(request)
 
-    projects_content.pop(new_project_content[instances.PROJECT_ID])
-
+    projects_content.pop(project_content[instances.PROJECT_ID])
     ju.write_json_file(file_content, projects_content)
     return HttpResponseRedirect(redirect_to)

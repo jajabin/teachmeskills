@@ -22,6 +22,7 @@ def get_page_hello(request) -> HttpResponse:
     logging.debug(f"request = {request}")
     logging.debug(f"request.POST = {request.POST.get}")
     logging.debug(f"request.body = {request.body}")
+
     switcher = {
         "GET": show_page_hello,
         "POST": save_user_data,
@@ -39,7 +40,7 @@ def show_page_hello(request) -> HttpResponse:
     msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode", **user_session[user_id])
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Hello", **user_session[user_id], body=msg)
 
-    return HttpResponse(msg)
+    return responds.respond_200(request, msg)
 
 
 def save_user_data(request) -> HttpResponse:
@@ -56,7 +57,8 @@ def save_user_data(request) -> HttpResponse:
 
 def write_user_data(request, redirect_to) -> HttpResponse:
     user_data = ju.read_json_file(paths.USER_SESSIONS)
-    new_user = uu.parse_received_data(request)
+    new_user = instances.NEW_USER.copy()
+    new_user.update(uu.parse_received_data(request))
 
     if new_user[instances.AGE_key]:
         today = datetime.today().year

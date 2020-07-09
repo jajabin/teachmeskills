@@ -22,8 +22,8 @@ def read_user_session(user_id: str) -> Dict[str, str]:
 
 
 def parse_received_data(request) -> Dict[str, str]:
-    user_data = instances.NEW_USER.copy()
+    new_data = {}
     for key, value in request.POST.items():
         if value:
-            user_data[key] = value
-    return user_data
+            new_data[key] = value
+    return new_data
