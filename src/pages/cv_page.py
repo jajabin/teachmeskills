@@ -46,9 +46,9 @@ def handler_page_cv(request, **kwargs) -> HttpResponse:
     try:
         return function(request, **kwargs)
     except (FileNotFoundError, errors.PageNotFoundError):
-        return responds.respond_404(request)
+        return responds.respond_404()
     except errors.MethodNotAllowed:
-        return responds.respond_405(request)
+        return responds.respond_405()
 
 
 def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
@@ -152,7 +152,7 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str, **kw
         .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], formaction=formaction)
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
 
-    return responds.respond_200(request, msg)
+    return responds.respond_200(msg)
 
 
 @csrf_exempt
@@ -183,9 +183,9 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwarg
     try:
         return function(request, redirect_to, file_content)
     except (FileNotFoundError, errors.PageNotFoundError):
-        responds.respond_404(request)
+        return responds.respond_404()
     except errors.MethodNotAllowed:
-        responds.respond_405(request)
+        return responds.respond_405()
 
 
 def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
@@ -196,9 +196,9 @@ def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
     projects_content = ju.read_json_file(file_content)
 
     if instances.PROJECT_ID not in new_project_content:
-        return responds.respond_418(request)
+        return responds.respond_418()
     if new_project_content[instances.PROJECT_ID] not in projects_content:
-        return responds.respond_418(request)
+        return responds.respond_418()
 
     for item in new_project_content:
         if item != instances.PROJECT_ID:
@@ -229,9 +229,9 @@ def remove_project(request, redirect_to, file_content: Path) -> HttpResponse:
     projects_content = ju.read_json_file(file_content)
 
     if instances.PROJECT_ID not in project_content:
-        return responds.respond_418(request)
+        return responds.respond_418()
     if project_content[instances.PROJECT_ID] not in projects_content:
-        return responds.respond_418(request)
+        return responds.respond_418()
 
     projects_content.pop(project_content[instances.PROJECT_ID])
     ju.write_json_file(file_content, projects_content)

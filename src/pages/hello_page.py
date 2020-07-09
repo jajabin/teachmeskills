@@ -40,7 +40,7 @@ def show_page_hello(request) -> HttpResponse:
     msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode", **user_session[user_id])
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Hello", **user_session[user_id], body=msg)
 
-    return responds.respond_200(request, msg)
+    return responds.respond_200(msg)
 
 
 def save_user_data(request) -> HttpResponse:
@@ -72,4 +72,4 @@ def write_user_data(request, redirect_to) -> HttpResponse:
     user_data[user_id].update(new_user)
     ju.update_json_file(user_data, paths.USER_SESSIONS)
 
-    return responds.respond_302(request, redirect_to, user_id)
+    return responds.respond_302(redirect_to, user_id)

@@ -25,7 +25,7 @@ def get_page_goodbye(request) -> HttpResponse:
         raise errors.MethodNotAllowed
 
 
-def show_page_goodbye(request) -> None:
+def show_page_goodbye(request) -> HttpResponse:
     stats.increment_page_visit(request.path)
     today = datetime.today()
     phrase = say_bye(today.hour)
@@ -36,7 +36,7 @@ def show_page_goodbye(request) -> None:
     msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase, **user_session[user_id])
     msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Goodbye", **user_session[user_id], body=msg)
 
-    return responds.respond_200(request, msg)
+    return responds.respond_200(msg)
 
 
 def save_page_goodbye(request) -> HttpResponse:
