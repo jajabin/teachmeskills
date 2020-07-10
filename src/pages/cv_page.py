@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-import uuid
 from pathlib import Path
 from typing import Tuple
 
@@ -132,28 +131,35 @@ def show_page_cv(request, endpoint: str, file_content: str, file_html: str, **kw
 
     cv_links = fu.get_file_contents(paths.CV_LINKS_HTML)
 
+    projects, formaction = get_projects_output(endpoint, page_content, **kwargs)
+
+    msg = fu.get_file_contents(file_html) \
+        .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], **formaction)
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
+
+    return responds.respond_200(msg)
+
+
+def get_projects_output(endpoint, page_content, **kwargs):
     projects = ""
-    formaction = ""
+    formaction = {}
+
     if endpoint == "/cv/projects/":
         for project in page_content:
             projects += "<h3>" + page_content[project][
                 "project_name"] + f" (id: {project})     " + "<a href=/cv/project/" + project + ">Edit</a>" + "</h3>"
             projects += "<p>" + page_content[project]["project_date"] + "</p>"
             projects += "<p>" + page_content[project]["project_description"] + "</p>"
+
     if endpoint.startswith("/cv/project/"):
         project_id = kwargs[instances.PROJECT_ID]
         if project_id in page_content:
             projects += "<h3>" + page_content[project_id]["project_name"] + f" (id: {project_id})" + "</h3>"
             projects += "<p>" + page_content[project_id]["project_date"] + "</p>"
             projects += "<p>" + page_content[project_id]["project_description"] + "</p>"
-            formaction = endpoint + "set_night_mode/"
+            formaction["action_night_mode"] = endpoint + "set_night_mode/"
 
-
-    msg = fu.get_file_contents(file_html) \
-        .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], formaction=formaction)
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
-
-    return responds.respond_200(msg)
+    return projects, formaction
 
 
 @csrf_exempt
@@ -167,11 +173,7 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwarg
     :return: nothing
     """
 
-    if endpoint.startswith("/cv/project/"):
-        redirect_to = "/cv/project/" + kwargs[instances.PROJECT_ID]
-    else:
-        redirect_to = instances.ENDPOINT_REDIRECTS[endpoint]
-
+    redirect_to = get_redirect_to(endpoint, **kwargs)
     logging.debug(f"redirect_to = {redirect_to}")
 
     switcher = {
@@ -187,6 +189,18 @@ def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwarg
         return responds.respond_404()
     except errors.MethodNotAllowed:
         return responds.respond_405()
+
+
+def get_redirect_to(endpoint, **kwargs):
+    if endpoint in instances.ENDPOINT_REDIRECTS:
+        return instances.ENDPOINT_REDIRECTS[endpoint]
+
+    if endpoint.startswith("/cv/project/"):
+        if endpoint.endswith("/delete/"):
+            return "/cv/projects/"
+        return "/cv/project/" + kwargs[instances.PROJECT_ID]
+
+    return responds.respond_404()
 
 
 def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:

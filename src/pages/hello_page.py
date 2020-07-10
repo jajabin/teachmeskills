@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 
 import src.common.errors as errors
 import src.common.instances as instances

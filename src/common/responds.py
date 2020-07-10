@@ -1,8 +1,4 @@
-import logging
-from typing import Dict
-
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
 
 from src.common import instances
 
@@ -39,4 +35,3 @@ def respond_302(redirect_to, user_id) -> HttpResponse:
     response.set_cookie(instances.USER_ID, user_id, max_age=None)
     response.status_code = 302
     return response
-

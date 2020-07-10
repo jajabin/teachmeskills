@@ -60,6 +60,18 @@ def show_page_statistics(request) -> HttpResponse:
         stats[page]["week"] = calculate_stats(statistics_content[page], today, 7)
         stats[page]["month"] = calculate_stats(statistics_content[page], today, 30)
 
+    html = get_stats_output(stats)
+
+    user_id = uu.get_user_id(request)
+    user_session = uu.read_user_session(user_id)
+
+    msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
+    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Statistics", **user_session[user_id], body=msg)
+
+    return responds.respond_200(msg)
+
+
+def get_stats_output(stats):
     html = """<tr>
             <th>Page</th>
             <th>Today</th>
@@ -73,13 +85,7 @@ def show_page_statistics(request) -> HttpResponse:
             html += f"<td>{count}</td>"
     html += "</tr>"
 
-    user_id = uu.get_user_id(request)
-    user_session = uu.read_user_session(user_id)
-
-    msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Statistics", **user_session[user_id], body=msg)
-
-    return responds.respond_200(msg)
+    return html
 
 
 def save_page_statistics(request) -> HttpResponse:
