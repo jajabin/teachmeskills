@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 import src.common.errors as errors
 import src.common.instances as instances
@@ -13,16 +14,15 @@ from src.common.night_mode import set_night_mode
 from django.views.decorators.csrf import csrf_exempt
 
 
+@require_http_methods(["GET", "POST"])
 @csrf_exempt
 def get_page_goodbye(request) -> HttpResponse:
     switcher = {
         "GET": show_page_goodbye,
         "POST": save_page_goodbye,
     }
-    if request.method in switcher:
-        return switcher[request.method](request)
-    else:
-        raise errors.MethodNotAllowed
+
+    return switcher[request.method](request)
 
 
 def show_page_goodbye(request) -> HttpResponse:
@@ -33,10 +33,10 @@ def show_page_goodbye(request) -> HttpResponse:
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
 
-    msg = fu.get_file_contents(paths.GOODBYE_HTML).format(date=today, phrase=phrase, **user_session[user_id])
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Goodbye", **user_session[user_id], body=msg)
-
-    return responds.respond_200(msg)
+    return responds.respond_200(request, paths.GOODBYE_HTML, {"action_night_mode": "/goodbye/set_night_mode/",
+                                                              "date": today,
+                                                              "phrase": phrase,
+                                                              **user_session[user_id]})
 
 
 def save_page_goodbye(request) -> HttpResponse:
@@ -47,7 +47,7 @@ def save_page_goodbye(request) -> HttpResponse:
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)
     else:
-        raise errors.MethodNotAllowed
+        raise errors.PageNotFoundError
 
 
 def say_bye(hour) -> str:

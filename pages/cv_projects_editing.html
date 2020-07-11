@@ -1,32 +1,31 @@
-<form method="post">
-    <button class="slider" formaction="/cv/projects/editing/set_night_mode/" name="night_mode" type="submit">Night mode</button>
-</form>
+{% extends "base.html" %}
+
+{% block title %}CV - Projects Editing{% endblock %}
+
+{% block content %}
 <div>
-    <h1>{name:}</h1>
-    <h2>{position:}</h2>
-    <p class="center">{about:}</p>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
 </div>
 <div>
-    {cv_links:}
+    {{ cv_links|safe }}
 </div>
 <form method="post">
-    <p>
         <label for="project_id">ID проекта:</label>
         <input id="project_id" name="project_id"></input>
-    </p>
-    <p>
+    <br>
         <label for="project_name">Название проекта:</label>
         <input id="project_name" name="project_name"></input>
-    </p>
-    <p>
+    <br>
         <label for="project_date">Дата:</label>
         <input id="project_date" name="project_date"></input>
-    </p>
-    <p>
+    <br>
         <label for="project_description">Описание:</label>
-        <input id="project_description" name="project_description"></input>
-    </p>
+        <textarea id="project_description" name="project_description"></textarea>
+    <br>
     <button formaction="/cv/projects/editing/add" name="add" type="submit">Add</button>
     <button formaction="/cv/projects/editing/edit" name="edit" type="submit">Edit</button>
     <button formaction="/cv/projects/editing/delete" name="delete" type="submit">Delete</button>
 </form>
+{% endblock %}

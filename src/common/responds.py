@@ -1,12 +1,12 @@
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect
+from django.urls import reverse
 
 from src.common import instances
 
 
-def respond_200(msg) -> HttpResponse:
-    response = HttpResponse(msg)
-    response.status_code = 200
-    return response
+def respond_200(request, file, context, content_type="text/html") -> HttpResponse:
+    return render(request, file, context, content_type)
 
 
 def respond_404() -> HttpResponse:

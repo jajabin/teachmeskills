@@ -10,8 +10,7 @@ import src.utils.user_utils as uu
 from src.common import responds
 
 
-@csrf_exempt
-def set_night_mode(request, redirect_to: str, _file_content: str = None) -> HttpResponse:
+def set_night_mode(request, redirect_to: str, _file_content: str = None, _project_id: str = None) -> HttpResponse:
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
     new_colors = get_colors(user_session[user_id])

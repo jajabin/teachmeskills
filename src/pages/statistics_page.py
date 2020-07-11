@@ -2,11 +2,11 @@ from datetime import datetime, timedelta
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 import src.common.errors as errors
 import src.common.paths as paths
 import src.common.responds as responds
-import src.utils.file_utils as fu
 import src.utils.json_utils as ju
 import src.utils.user_utils as uu
 import src.common.instances as instances
@@ -36,56 +36,36 @@ def calculate_stats(page_statistics, start_date, count_days) -> int:
     return visit_counter
 
 
+@require_http_methods(["GET", "POST"])
 @csrf_exempt
 def get_page_statistics(request) -> HttpResponse:
     switcher = {
         "GET": show_page_statistics,
         "POST": save_page_statistics,
     }
-    if request.method in switcher:
-        return switcher[request.method](request)
-    else:
-        raise errors.MethodNotAllowed
+
+    return switcher[request.method](request)
 
 
 def show_page_statistics(request) -> HttpResponse:
     statistics_content = ju.read_json_file(paths.VISIT_COUNTERS)
 
     today = datetime.today().date()
-    stats = {}
+    stats = []
     for page in statistics_content:
-        stats[page] = {}
-        stats[page]["today"] = calculate_stats(statistics_content[page], today, 0)
-        stats[page]["yesterday"] = calculate_stats(statistics_content[page], today - timedelta(days=1), 0)
-        stats[page]["week"] = calculate_stats(statistics_content[page], today, 7)
-        stats[page]["month"] = calculate_stats(statistics_content[page], today, 30)
-
-    html = get_stats_output(stats)
+        stat = {"page": page,
+                "today": calculate_stats(statistics_content[page], today, 0),
+                "yesterday": calculate_stats(statistics_content[page], today - timedelta(days=1), 0),
+                "week": calculate_stats(statistics_content[page], today, 7),
+                "month": calculate_stats(statistics_content[page], today, 30)}
+        stats.append(stat)
 
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
 
-    msg = fu.get_file_contents(paths.STATISTICS_HTML).format(stats=html, **user_session[user_id])
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Statistics", **user_session[user_id], body=msg)
-
-    return responds.respond_200(msg)
-
-
-def get_stats_output(stats):
-    html = """<tr>
-            <th>Page</th>
-            <th>Today</th>
-            <th>Yesterday</th> 
-            <th>Week</th>
-            <th>Month</th>
-           </tr>"""
-    for endpoint, visits in stats.items():
-        html += f"<tr><td>{endpoint}</td>"
-        for data, count in visits.items():
-            html += f"<td>{count}</td>"
-    html += "</tr>"
-
-    return html
+    return responds.respond_200(request, paths.STATISTICS_HTML, {"action_night_mode": "/statistics/set_night_mode/",
+                                                                 "stats": stats,
+                                                                 **user_session[user_id]})
 
 
 def save_page_statistics(request) -> HttpResponse:
@@ -96,4 +76,4 @@ def save_page_statistics(request) -> HttpResponse:
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)
     else:
-        raise errors.MethodNotAllowed
+        raise errors.PageNotFoundError

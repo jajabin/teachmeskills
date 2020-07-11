@@ -4,8 +4,11 @@ import re
 from pathlib import Path
 from typing import Tuple
 
+from Tools.scripts.fixcid import Dict
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 import src.common.errors as errors
 import src.common.instances as instances
@@ -19,35 +22,142 @@ from src.common.night_mode import set_night_mode
 
 
 @csrf_exempt
-def handler_page_cv(request, **kwargs) -> HttpResponse:
-    logging.debug(f"request = {request}")
-    logging.debug(f"request.POST = {request.POST.get}")
-    logging.debug(f"request.body = {request.body}")
+def get_page_cv(request) -> HttpResponse:
+    return get_page(request, None, paths.CV_HTML)
+
+
+@csrf_exempt
+def get_page_cv_education(request) -> HttpResponse:
+    return get_page(request, paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML)
+
+
+@csrf_exempt
+def get_page_cv_job(request) -> HttpResponse:
+    return get_page(request, paths.CV_JOB_JSON, paths.CV_JOB_HTML)
+
+
+@csrf_exempt
+def get_page_cv_skills(request) -> HttpResponse:
+    return get_page(request, paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML)
+
+
+@csrf_exempt
+def get_page_cv_projects(request) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML)
+
+
+@csrf_exempt
+def get_page_projects_editing(request) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML)
+
+
+@csrf_exempt
+def get_page_cv_project(request, project_id) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML, project_id)
+
+
+@require_http_methods(["GET", "POST"])
+def get_page(request, file_content: Path, file_html: Path, project_id: str = None) -> HttpResponse:
+    switcher = {
+        "GET": show_page_cv,
+        "POST": save_page_cv,
+    }
+
+    return switcher[request.method](request, request.path, file_content, file_html, project_id)
+
+
+def show_page_cv(
+        request,
+        endpoint: str,
+        file_content: str,
+        file_html: str,
+        project_id: str = None
+) -> HttpResponse:
+    """
+    show a page
+    :param request: server instance
+    :param endpoint: current endpoint
+    :param file_content: text content
+    :param file_html: html code
+    :param project_id: project ID
+    :return: nothing
+    """
+    stats.increment_page_visit(endpoint)
+
+    resume_content = ju.read_json_file(paths.CV_JSON)
+
+    page_content = {}
+    if file_content is not None:
+        page_content = ju.read_json_file(file_content)
+
+    projects = get_projects(endpoint, page_content, project_id)
+
+    user_id = uu.get_user_id(request)
+    user_session = uu.read_user_session(user_id)
+
+    cv_links = fu.get_file_contents(paths.CV_LINKS_HTML)
+
+    return responds.respond_200(request, file_html, {"action_night_mode": endpoint + "set_night_mode/",
+                                                     "cv_links": cv_links,
+                                                     **resume_content,
+                                                     **page_content,
+                                                     "projects": projects,
+                                                     **user_session[user_id]})
+
+
+def get_projects(endpoint, page_content, project_id: str = None):
+    if not endpoint.startswith("/cv/project"):
+        return []
+
+    if project_id is not None:
+        return [build_project(page_content, project_id)]
+
+    projects = []
+    for project in page_content:
+        project = build_project(page_content, project)
+        projects.append(project)
+    return projects
+
+
+def build_project(page_content, project):
+    project = {"project_id": project,
+               "project_name": page_content[project]["project_name"],
+               "project_date": page_content[project]["project_date"],
+               "project_description": page_content[project]["project_description"]}
+    return project
+
+
+def save_page_cv(
+        request,
+        endpoint: str,
+        file_content: Path,
+        _file_html,
+        project_id: str = None
+) -> HttpResponse:
+    """
+    save some settings
+    :param request: server instance
+    :param endpoint: current endpoint
+    :param file_content: text content (for projects editing)
+    :param _file_html: not used
+    :param project_id: project ID
+    :return: nothing
+    """
+
+    redirect_to = get_redirect_to(endpoint, project_id)
+    logging.debug(f"redirect_to = {redirect_to}")
 
     switcher = {
-        r"^/cv\/project\/<str:project_id>\/\/(\w+)": get_page_cv_project,
-        r"^/cv\/project\/<str:project_id>/": get_page_cv_project,
-        r"^/cv\/project\/(\w+)/$": get_page_cv_project,
-        r"^/cv\/projects\/editing/$": get_page_projects_editing,
-        r"^/cv\/projects\/editing\/(\w+)$": get_page_projects_editing,
-        r"^/cv\/projects/$": get_page_cv_projects,
-        r"^/cv\/projects\/(\w+)$": get_page_cv_projects,
-        r"^/cv\/education/$": get_page_cv_education,
-        r"^/cv\/education\/(\w+)$": get_page_cv_education,
-        r"^/cv\/skills/$": get_page_cv_skills,
-        r"^/cv\/skills\/(\w+)$": get_page_cv_skills,
-        r"^/cv\/job/$": get_page_cv_job,
-        r"^/cv\/job\/(\w+)$": get_page_cv_job,
-        r"^/cv/$": get_page_cv,
-        r"^/cv\/(\w+)": get_page_cv,
+        r"^/(.+)\/set_night_mode/": set_night_mode,
+        r"^/(.+)\/delete": remove_project,
+        r"^/(.+)\/add": add_project,
+        r"^/(.+)\/edit": edit_project,
     }
-    function, _arguments = parse_endpoint(switcher, request.path)
+    function, _arguments = parse_endpoint(switcher, endpoint)
     try:
-        return function(request, **kwargs)
+        return function(request, redirect_to, file_content, project_id)
     except (FileNotFoundError, errors.PageNotFoundError):
         return responds.respond_404()
-    except errors.MethodNotAllowed:
-        return responds.respond_405()
 
 
 def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
@@ -69,141 +179,19 @@ def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
     return function, arguments
 
 
-def get_page_cv(request, **kwargs) -> HttpResponse:
-    return get_page(request, None, paths.CV_HTML, **kwargs)
-
-
-def get_page_cv_education(request, **kwargs) -> HttpResponse:
-    return get_page(request, paths.CV_EDUCATION_JSON, paths.CV_EDUCATION_HTML, **kwargs)
-
-
-def get_page_cv_job(request, **kwargs) -> HttpResponse:
-    return get_page(request, paths.CV_JOB_JSON, paths.CV_JOB_HTML, **kwargs)
-
-
-def get_page_cv_skills(request, **kwargs) -> HttpResponse:
-    return get_page(request, paths.CV_SKILLS_JSON, paths.CV_SKILLS_HTML, **kwargs)
-
-
-def get_page_cv_projects(request, **kwargs) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_HTML, **kwargs)
-
-
-def get_page_projects_editing(request, **kwargs) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML, **kwargs)
-
-
-def get_page_cv_project(request, **kwargs) -> HttpResponse:
-    print(kwargs)
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML, **kwargs)
-
-
-@csrf_exempt
-def get_page(request, file_content: Path, file_html: Path, **kwargs) -> HttpResponse:
-    switcher = {
-        "GET": show_page_cv,
-        "POST": save_page_cv,
-    }
-    if request.method in switcher:
-        return switcher[request.method](request, request.path, file_content, file_html, **kwargs)
-    else:
-        raise errors.MethodNotAllowed
-
-
-def show_page_cv(request, endpoint: str, file_content: str, file_html: str, **kwargs) -> HttpResponse:
-    """
-    show a page
-    :param request: server instance
-    :param endpoint: current endpoint
-    :param file_content: text content
-    :param file_html: html code
-    :return: nothing
-    """
-    stats.increment_page_visit(endpoint)
-
-    resume_content = ju.read_json_file(paths.CV_JSON)
-    page_content = {}
-    if file_content is not None:
-        page_content = ju.read_json_file(file_content)
-
-    user_id = uu.get_user_id(request)
-    user_session = uu.read_user_session(user_id)
-
-    cv_links = fu.get_file_contents(paths.CV_LINKS_HTML)
-
-    projects, formaction = get_projects_output(endpoint, page_content, **kwargs)
-
-    msg = fu.get_file_contents(file_html) \
-        .format(cv_links=cv_links, **resume_content, **page_content, projects=projects, **user_session[user_id], **formaction)
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Resume", **user_session[user_id], body=msg)
-
-    return responds.respond_200(msg)
-
-
-def get_projects_output(endpoint, page_content, **kwargs):
-    projects = ""
-    formaction = {}
-
-    if endpoint == "/cv/projects/":
-        for project in page_content:
-            projects += "<h3>" + page_content[project][
-                "project_name"] + f" (id: {project})     " + "<a href=/cv/project/" + project + ">Edit</a>" + "</h3>"
-            projects += "<p>" + page_content[project]["project_date"] + "</p>"
-            projects += "<p>" + page_content[project]["project_description"] + "</p>"
-
-    if endpoint.startswith("/cv/project/"):
-        project_id = kwargs[instances.PROJECT_ID]
-        if project_id in page_content:
-            projects += "<h3>" + page_content[project_id]["project_name"] + f" (id: {project_id})" + "</h3>"
-            projects += "<p>" + page_content[project_id]["project_date"] + "</p>"
-            projects += "<p>" + page_content[project_id]["project_description"] + "</p>"
-            formaction["action_night_mode"] = endpoint + "set_night_mode/"
-
-    return projects, formaction
-
-
-@csrf_exempt
-def save_page_cv(request, endpoint: str, file_content: Path, _file_html, **kwargs) -> HttpResponse:
-    """
-    save some settings
-    :param request: server instance
-    :param endpoint: current endpoint
-    :param file_content: text content (for projects editing)
-    :param _file_html: not used
-    :return: nothing
-    """
-
-    redirect_to = get_redirect_to(endpoint, **kwargs)
-    logging.debug(f"redirect_to = {redirect_to}")
-
-    switcher = {
-        r"^/(.+)\/set_night_mode/": set_night_mode,
-        r"^/(.+)\/delete": remove_project,
-        r"^/(.+)\/add": add_project,
-        r"^/(.+)\/edit": edit_project,
-    }
-    function, _arguments = parse_endpoint(switcher, endpoint)
-    try:
-        return function(request, redirect_to, file_content)
-    except (FileNotFoundError, errors.PageNotFoundError):
-        return responds.respond_404()
-    except errors.MethodNotAllowed:
-        return responds.respond_405()
-
-
-def get_redirect_to(endpoint, **kwargs):
+def get_redirect_to(endpoint, project_id: str = None):
     if endpoint in instances.ENDPOINT_REDIRECTS:
         return instances.ENDPOINT_REDIRECTS[endpoint]
 
     if endpoint.startswith("/cv/project/"):
-        if endpoint.endswith("/delete/"):
+        if endpoint.endswith("/delete"):
             return "/cv/projects/"
-        return "/cv/project/" + kwargs[instances.PROJECT_ID]
+        return "/cv/project/" + project_id
 
     return responds.respond_404()
 
 
-def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
+def edit_project(request, redirect_to, file_content: Path, _project_id) -> HttpResponse:
     logging.debug(redirect_to)
     new_project_content = instances.NEW_PROJECT.copy()
     new_project_content.update(uu.parse_received_data(request))
@@ -223,7 +211,7 @@ def edit_project(request, redirect_to, file_content: Path) -> HttpResponse:
     return HttpResponseRedirect(redirect_to)
 
 
-def add_project(request, redirect_to, file_content: Path) -> HttpResponse:
+def add_project(request, redirect_to, file_content: Path, _project_id) -> HttpResponse:
     projects_content = ju.read_json_file(file_content)
     new_project = instances.NEW_PROJECT.copy()
     new_project.update(uu.parse_received_data(request))
@@ -237,11 +225,16 @@ def add_project(request, redirect_to, file_content: Path) -> HttpResponse:
     return HttpResponseRedirect(redirect_to)
 
 
-def remove_project(request, redirect_to, file_content: Path) -> HttpResponse:
+def remove_project(request, redirect_to, file_content: Path, project_id) -> HttpResponse:
+    projects_content = ju.read_json_file(file_content)
+
+    if project_id is not None:
+        projects_content.pop(project_id)
+        ju.write_json_file(file_content, projects_content)
+        return HttpResponseRedirect(redirect_to)
+
     project_content = instances.NEW_PROJECT.copy()
     project_content.update(uu.parse_received_data(request))
-
-    projects_content = ju.read_json_file(file_content)
 
     if instances.PROJECT_ID not in project_content:
         return responds.respond_418()

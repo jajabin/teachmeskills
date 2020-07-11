@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 import src.common.errors as errors
 import src.common.instances as instances
@@ -17,6 +18,7 @@ from src.common.night_mode import set_night_mode
 from django.views.decorators.csrf import csrf_exempt
 
 
+@require_http_methods(["GET", "POST"])
 @csrf_exempt    # what is it ????
 def get_page_hello(request) -> HttpResponse:
     logging.debug(f"request = {request}")
@@ -27,20 +29,17 @@ def get_page_hello(request) -> HttpResponse:
         "GET": show_page_hello,
         "POST": save_user_data,
     }
-    if request.method in switcher:
-        return switcher[request.method](request)
-    else:
-        raise errors.MethodNotAllowed
+
+    return switcher[request.method](request)
 
 
 def show_page_hello(request) -> HttpResponse:
     stats.increment_page_visit(request.path)
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
-    msg = fu.get_file_contents(paths.HELLO_HTML).format(formaction="/hello/set_night_mode/", **user_session[user_id])
-    msg = fu.get_file_contents(paths.TEMPLATE_HTML).format(title="Hello", **user_session[user_id], body=msg)
 
-    return responds.respond_200(msg)
+    return responds.respond_200(request, paths.HELLO_HTML, {"action_night_mode": "/hello/set_night_mode/",
+                                                            **user_session[user_id]})
 
 
 def save_user_data(request) -> HttpResponse:
@@ -52,7 +51,7 @@ def save_user_data(request) -> HttpResponse:
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)
     else:
-        raise errors.MethodNotAllowed
+        raise errors.PageNotFoundError
 
 
 def write_user_data(request, redirect_to) -> HttpResponse:

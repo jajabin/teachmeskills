@@ -1,8 +1,24 @@
-<form method="post">
-    <button class="slider" formaction="/statistics/set_night_mode/" name="night_mode" type="submit">Night mode</button>
-</form>
+{% extends "base.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block content %}
 <table>
     <tr>
-        {stats:}
+        <td>Page</td>
+        <td>Today</td>
+        <td>Yesterday</td>
+        <td>Week</td>
+        <td>Month</td>
     </tr>
+    {% for stat in stats %}
+        <tr>
+            <td>{{ stat.page }}</td>
+            <td>{{ stat.today }}</td>
+            <td>{{ stat.yesterday }}</td>
+            <td>{{ stat.week }}</td>
+            <td>{{ stat.month }}</td>
+        </tr>
+    {% endfor %}
 </table>
+{% endblock %}

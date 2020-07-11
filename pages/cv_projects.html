@@ -1,17 +1,24 @@
-<form method="post">
-    <button class="slider" formaction="/cv/projects/set_night_mode/" name="night_mode" type="submit">Night mode</button>
-</form>
+{% extends "base.html" %}
+
+{% block title %}CV - Projects{% endblock %}
+
+{% block content %}
 <div>
-    <h1>{cv_name:}</h1>
-    <h2>{position:}</h2>
-    <p class="center">{about:}</p>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
 </div>
 <div>
-    {cv_links:}
+    {{ cv_links|safe }}
 </div>
 <div id="main">
-        {projects:}
+        {% for project in projects %}
+            <h3><a href="/cv/project/{{ project.project_id }}">{{ project.project_name }}</a>    (id: {{ project.project_id }})</h3>
+            <p>{{ project.project_date }}</p>
+            <p>{{ project.project_description }}</p>
+        {% endfor %}
 </div>
 <div>
     <b><a href="/cv/projects/editing">Edit Project</a></b>
 </div>
+{% endblock %}
