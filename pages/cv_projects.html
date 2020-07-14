@@ -13,7 +13,7 @@
 </div>
 <div id="main">
         {% for project in projects %}
-            <h3><a href="/cv/project/{{ project.project_id }}">{{ project.project_name }}</a>    (id: {{ project.project_id }})</h3>
+            <h3><a href="/cv/project/{{ project.project_id }}">{{ project.project_name }}</a></h3>
             <p>{{ project.project_date }}</p>
             <p>{{ project.project_description }}</p>
         {% endfor %}

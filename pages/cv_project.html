@@ -14,7 +14,7 @@
 <div id="main">
         {% for project in projects %}
         <form method="post">
-            <h3>{{ project.project_name }}    (id: {{ project.project_id }})
+            <h3>{{ project.project_name }}
                 <button formaction="/cv/project/{{ project.project_id }}/delete" name="delete" type="submit">Delete</button>
             </h3>
             <p>{{ project.project_date }}</p>
