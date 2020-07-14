@@ -37,9 +37,7 @@ ENDPOINT_REDIRECTS = {
     "/cv/projects/set_night_mode/": "/cv/projects",
     "/statistics": "/statistics",
     "/statistics/set_night_mode/": "/statistics",
-    "/cv/projects/editing": "/cv/projects/editing",
-    "/cv/projects/editing/add": "/cv/projects",
-    "/cv/projects/editing/edit": "/cv/projects",
-    "/cv/projects/editing/delete": "/cv/projects",
-    "/cv/projects/editing/set_night_mode/": "/cv/projects/editing"
+    "/cv/projects/additing": "/cv/projects/additing",
+    "/cv/projects/additing/save": "/cv/projects",\
+    "/cv/projects/additing/set_night_mode/": "/cv/projects/additing"
 }

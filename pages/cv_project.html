@@ -23,6 +23,9 @@
         {% endfor %}
 </div>
 <div>
-    <b><a href="/cv/projects/editing">Edit Project</a></b>
+    {% for project in projects %}
+    <b><a href="/cv/project/{{ project.project_id }}/editing">Edit Project</a></b>
+    {% endfor %}
+    <b><a href="/cv/projects/editing">Add Project</a></b>
 </div>
 {% endblock %}

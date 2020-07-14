@@ -12,10 +12,7 @@
     {{ cv_links|safe }}
 </div>
 <form method="post">
-        <label for="project_id">ID проекта:</label>
-        <input id="project_id" name="project_id"></input>
-    <br>
-        <label for="project_name">Название проекта:</label>
+<label for="project_name">Название проекта:</label>
         <input id="project_name" name="project_name"></input>
     <br>
         <label for="project_date">Дата:</label>
@@ -24,8 +21,8 @@
         <label for="project_description">Описание:</label>
         <textarea id="project_description" name="project_description"></textarea>
     <br>
-    <button formaction="/cv/projects/editing/add" name="add" type="submit">Add</button>
-    <button formaction="/cv/projects/editing/edit" name="edit" type="submit">Edit</button>
-    <button formaction="/cv/projects/editing/delete" name="delete" type="submit">Delete</button>
+    {% for project in projects %}
+    <button formaction="/cv/project/{{ project.project_id }}/editing/edit" name="edit" type="submit">Edit</button>
+    {% endfor %}
 </form>
 {% endblock %}

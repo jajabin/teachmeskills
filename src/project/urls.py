@@ -20,7 +20,7 @@ import logging
 
 from src.common import paths
 from src.pages.cv_page import get_page_cv, get_page_cv_job, get_page_cv_skills, get_page_cv_education, \
-    get_page_cv_projects, get_page_projects_editing, get_page_cv_project
+    get_page_cv_projects, get_page_projects_editing, get_page_cv_project, get_page_cv_project_editing
 from src.pages.goodbye_page import get_page_goodbye
 from src.pages.hello_page import get_page_hello
 from src.styles.css_style import get_cv_style
@@ -71,13 +71,13 @@ urlpatterns = [
     path('cv/education/set_night_mode/', get_page_cv_education),
     path('cv/projects/', get_page_cv_projects),
     path('cv/projects/set_night_mode/', get_page_cv_projects),
-    path('cv/projects/editing/', get_page_projects_editing),
-    path('cv/projects/editing/set_night_mode/', get_page_projects_editing),
-    path('cv/projects/editing/add', get_page_projects_editing),
-    path('cv/projects/editing/edit', get_page_projects_editing),
-    path('cv/projects/editing/delete', get_page_projects_editing),
+    path('cv/projects/additing/', get_page_projects_editing),
+    path('cv/projects/additing/set_night_mode/', get_page_projects_editing),
+    path('cv/projects/additing/add', get_page_projects_editing),
     path('cv/project/', get_page_cv_project),
     path('cv/project/<str:project_id>/', get_page_cv_project),
     path('cv/project/<str:project_id>/set_night_mode/', get_page_cv_project),
     path('cv/project/<str:project_id>/delete', get_page_cv_project),
+    path('cv/project/<str:project_id>/editing', get_page_cv_project_editing),
+    path('cv/project/<str:project_id>/editing/edit', get_page_cv_project_editing),
 ]

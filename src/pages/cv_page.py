@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Tuple
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -47,12 +46,17 @@ def get_page_cv_projects(request) -> HttpResponse:
 
 @csrf_exempt
 def get_page_projects_editing(request) -> HttpResponse:
-    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_EDITING_HTML)
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECTS_ADDITING_HTML)
 
 
 @csrf_exempt
 def get_page_cv_project(request, project_id) -> HttpResponse:
     return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_HTML, project_id)
+
+
+@csrf_exempt
+def get_page_cv_project_editing(request, project_id) -> HttpResponse:
+    return get_page(request, paths.CV_PROJECTS_JSON, paths.CV_PROJECT_EDITING_HTML, project_id)
 
 
 @require_http_methods(["GET", "POST"])
@@ -190,21 +194,16 @@ def get_redirect_to(endpoint, project_id: str = None):
     return responds.respond_404()
 
 
-def edit_project(request, redirect_to, file_content: Path, _project_id) -> HttpResponse:
+def edit_project(request, redirect_to, file_content: Path, project_id) -> HttpResponse:
     logging.debug(redirect_to)
     new_project_content = instances.NEW_PROJECT.copy()
     new_project_content.update(uu.parse_received_data(request))
 
     projects_content = ju.read_json_file(file_content)
 
-    if instances.PROJECT_ID not in new_project_content:
-        return responds.respond_418()
-    if new_project_content[instances.PROJECT_ID] not in projects_content:
-        return responds.respond_418()
-
     for item in new_project_content:
         if item != instances.PROJECT_ID:
-            projects_content[new_project_content[instances.PROJECT_ID]][item] = new_project_content[item]
+            projects_content[project_id][item] = new_project_content[item]
 
     ju.write_json_file(file_content, projects_content)
     return HttpResponseRedirect(redirect_to)
@@ -224,22 +223,13 @@ def add_project(request, redirect_to, file_content: Path, _project_id) -> HttpRe
     return HttpResponseRedirect(redirect_to)
 
 
-def remove_project(request, redirect_to, file_content: Path, project_id) -> HttpResponse:
+def remove_project(_request, redirect_to, file_content: Path, project_id) -> HttpResponse:
     projects_content = ju.read_json_file(file_content)
 
-    if project_id is not None:
-        projects_content.pop(project_id)
-        ju.write_json_file(file_content, projects_content)
-        return HttpResponseRedirect(redirect_to)
-
-    project_content = instances.NEW_PROJECT.copy()
-    project_content.update(uu.parse_received_data(request))
-
-    if instances.PROJECT_ID not in project_content:
-        return responds.respond_418()
-    if project_content[instances.PROJECT_ID] not in projects_content:
+    if project_id is None:
         return responds.respond_418()
 
-    projects_content.pop(project_content[instances.PROJECT_ID])
+    projects_content.pop(project_id)
     ju.write_json_file(file_content, projects_content)
     return HttpResponseRedirect(redirect_to)
+
