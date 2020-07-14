@@ -4,7 +4,6 @@ import re
 from pathlib import Path
 from typing import Tuple
 
-from Tools.scripts.fixcid import Dict
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
