@@ -1,5 +1,7 @@
 db.sqlite3
 .idea/
+sessions.json
+visit_counters.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
