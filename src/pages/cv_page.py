@@ -123,10 +123,10 @@ def get_projects(endpoint, page_content, project_id: str = None):
 
 
 def build_project(page_content, project):
-    project = {"project_id": project,
-               "project_name": page_content[project]["project_name"],
-               "project_date": page_content[project]["project_date"],
-               "project_description": page_content[project]["project_description"]}
+    project = {instances.PROJECT_ID_key: project,
+               instances.PROJECT_NAME_key: page_content[project][instances.PROJECT_NAME_key],
+               instances.PROJECT_DATE_key: page_content[project][instances.PROJECT_DATE_key],
+               instances.PROJECT_DESCRIPTION_key: page_content[project][instances.PROJECT_DESCRIPTION_key]}
     return project
 
 

@@ -12,6 +12,7 @@ YEAR_key = "year"
 BCKG_COLOR = "background_color"
 TXT_COLOR = "text_color"
 
+PROJECT_ID_key = "project_id"
 PROJECT_NAME_key = "project_name"
 PROJECT_DATE_key = "project_date"
 PROJECT_DESCRIPTION_key = "project_description"
