@@ -15,6 +15,7 @@ import src.common.responds as responds
 import src.pages.statistics_page as stats
 import src.utils.file_utils as fu
 import src.utils.json_utils as ju
+import src.utils.project_utils as pu
 import src.utils.user_utils as uu
 from src.common.night_mode import set_night_mode
 
@@ -93,7 +94,7 @@ def show_page_cv(
     if file_content is not None:
         page_content = ju.read_json_file(file_content)
 
-    projects = get_projects(endpoint, page_content, project_id)
+    projects = pu.get_projects(endpoint, page_content, project_id)
 
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
@@ -106,28 +107,6 @@ def show_page_cv(
                                                      **page_content,
                                                      "projects": projects,
                                                      **user_session[user_id]})
-
-
-def get_projects(endpoint, page_content, project_id: str = None):
-    if not endpoint.startswith("/cv/project"):
-        return []
-
-    if project_id is not None:
-        return [build_project(page_content, project_id)]
-
-    projects = []
-    for project in page_content:
-        project = build_project(page_content, project)
-        projects.append(project)
-    return projects
-
-
-def build_project(page_content, project):
-    project = {instances.PROJECT_ID_key: project,
-               instances.PROJECT_NAME_key: page_content[project][instances.PROJECT_NAME_key],
-               instances.PROJECT_DATE_key: page_content[project][instances.PROJECT_DATE_key],
-               instances.PROJECT_DESCRIPTION_key: page_content[project][instances.PROJECT_DESCRIPTION_key]}
-    return project
 
 
 def save_page_cv(
@@ -182,7 +161,7 @@ def parse_endpoint(endpoints_dict, endpoint) -> Tuple:
     return function, arguments
 
 
-def get_redirect_to(endpoint, project_id: str = None):
+def get_redirect_to(endpoint, project_id: str = None) -> str:
     if endpoint in instances.ENDPOINT_REDIRECTS:
         return instances.ENDPOINT_REDIRECTS[endpoint]
 
