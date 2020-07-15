@@ -1,28 +1,16 @@
-<!-- BEGIN (write your solution here) -->
-<!DOCTYPE HTML>
-<html>
- <head>
-  <meta charset="UTF-8">
-  <title>Приветствие</title>
-  <link rel="stylesheet" href="cv_style.css">
- </head>
- <body style="background-color:{background_color:};color:{text_color:};">
-   <form method="post">
-          <button type="submit" class="slider" name="night_mode" formaction="/hello/set_night_mode">Night mode</button>
-  </form>
-    <form method="post">
-        <p>Hey {name:}!</p>
-        <p>You were born in {year:}.</p>
-        <p>
-            <label for="name">Name:</label>
-            <input id="name" name="name"></input>
-        </p>
-        <p>
-            <label for="age">Age:</label>
-            <input id="age" name="age"></input>
-        </p>
-        <button type="submit" name="send" formaction="/hello/save">Send</button>
-    </form>
- </body>
-</html>
-<!-- END -->
+<form method="post">
+    <button class="slider" formaction={formaction:} name="night_mode" type="submit">Night mode</button>
+</form>
+<form method="post">
+    <p>Hey {name:}!</p>
+    <p>You were born in {year:}.</p>
+    <p>
+        <label for="name">Name:</label>
+        <input id="name" name="name"></input>
+    </p>
+    <p>
+        <label for="age">Age:</label>
+        <input id="age" name="age"></input>
+    </p>
+    <button formaction="/hello/save" name="send" type="submit">Send</button>
+</form>

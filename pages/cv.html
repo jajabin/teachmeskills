@@ -1,6 +1,5 @@
-<body style="background-color:{background_color:};color:{text_color:};">
 <form method="post">
-    <button type="submit" class="slider" name="night_mode" formaction="/cv/set_night_mode">Night mode</button>
+    <button class="slider" formaction="/cv/set_night_mode" name="night_mode" type="submit">Night mode</button>
 </form>
 <div>
     <h1>{cv_name:}</h1>
@@ -8,8 +7,5 @@
     <p class="center">{about:}</p>
 </div>
 <div>
-    <div>
-        {cv_links:}
-    </div>
-</body>
-</html>
+    {cv_links:}
+</div>

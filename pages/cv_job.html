@@ -1,30 +1,25 @@
-<body style="background-color:{background_color:};color:{text_color:};">
-  <form method="post">
-          <button type="submit" class="slider" name="night_mode" formaction="/cv/job/set_night_mode">Night mode</button>
-  </form>
-  <div>
-	  <h1>{cv_name:}</h1>
-	  <h2>{position:}</h2>
-	  <p class="center">{about:}</p>
-  </div>
-   <div>
-       {cv_links:}
-  </div>
-	<div id="main">
-	  <div>
-	  	<h3>{head_experience:}</h3>
-	  	<b>{job_position:}</b>
-		<p>{date:}</p>
-		<p>{place:}</p>
-		<b>{head_duties:}</b>
-		<ul>
-			<li>{duties:}
-		</ul>
-		<b>{head_achievements:}</b>
-		<ul>
-			<li>{achievements:}
-		</ul>
-	  </div>
-  </div>
- </body>
-</html>
+<form method="post">
+    <button class="slider" formaction="/cv/job/set_night_mode" name="night_mode" type="submit">Night mode</button>
+</form>
+<div>
+    <h1>{cv_name:}</h1>
+    <h2>{position:}</h2>
+    <p class="center">{about:}</p>
+</div>
+<div>
+    {cv_links:}
+</div>
+<div id="main">
+        <h3>{head_experience:}</h3>
+        <b>{job_position:}</b>
+        <p>{date:}</p>
+        <p>{place:}</p>
+        <b>{head_duties:}</b>
+        <ul>
+            <li>{duties:}
+        </ul>
+        <b>{head_achievements:}</b>
+        <ul>
+            <li>{achievements:}
+        </ul>
+</div>

@@ -1,21 +1,16 @@
-<body style="background-color:{background_color:};color:{text_color:};">
-  <form method="post">
-          <button type="submit" class="slider" name="night_mode" formaction="/cv/education/set_night_mode">Night mode</button>
-  </form>
-  <div>
-	  <h1>{cv_name:}</h1>
-	  <h2>{position:}</h2>
-	  <p class="center">{about:}</p>
-  </div>
-   <div>
-       {cv_links:}
-  </div>
-  <div id="main">
-	  <div>
-	  	<h3>{head_education}</h3>
-	  	<b>{education}</b>
-	  	<p>{faculty}</p>
-	  </div>
-  </div>
- </body>
-</html>
+<form method="post">
+    <button class="slider" formaction="/cv/education/set_night_mode" name="night_mode" type="submit">Night mode</button>
+</form>
+<div>
+    <h1>{cv_name:}</h1>
+    <h2>{position:}</h2>
+    <p class="center">{about:}</p>
+</div>
+<div>
+    {cv_links:}
+</div>
+<div id="main">
+        <h3>{head_education}</h3>
+        <b>{education}</b>
+        <p>{faculty}</p>
+</div>
