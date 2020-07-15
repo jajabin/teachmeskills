@@ -39,6 +39,6 @@ ENDPOINT_REDIRECTS = {
     "/statistics": "/statistics",
     "/statistics/set_night_mode/": "/statistics",
     "/cv/projects/additing": "/cv/projects/additing",
-    "/cv/projects/additing/save": "/cv/projects",\
+    "/cv/projects/additing/add": "/cv/projects",
     "/cv/projects/additing/set_night_mode/": "/cv/projects/additing"
 }

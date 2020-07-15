@@ -220,6 +220,7 @@ def add_project(request, redirect_to, file_content: Path, _project_id) -> HttpRe
 
     projects_content[new_project_id].update(new_project)
     ju.write_json_file(file_content, projects_content)
+
     return HttpResponseRedirect(redirect_to)
 
 
