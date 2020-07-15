@@ -5,15 +5,14 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
-import src.common.errors as errors
-import src.common.instances as instances
-import src.common.paths as paths
-import src.common.responds as responds
-import src.pages.statistics_page as stats
-import src.utils.file_utils as fu
-import src.utils.json_utils as ju
-import src.utils.user_utils as uu
-from src.common.night_mode import set_night_mode
+import common.errors as errors
+import common.instances as instances
+import common.paths as paths
+import common.responds as responds
+import pages.statistics_page as stats
+import utils.json_utils as ju
+import utils.user_utils as uu
+from common.night_mode import set_night_mode
 
 from django.views.decorators.csrf import csrf_exempt
 

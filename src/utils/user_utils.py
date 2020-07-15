@@ -2,9 +2,9 @@ import logging
 import uuid
 from typing import Dict
 
-import src.common.instances as instances
-import src.common.paths as paths
-import src.utils.json_utils as ju
+import common.instances as instances
+import common.paths as paths
+import utils.json_utils as ju
 
 
 def get_user_id(request) -> str:

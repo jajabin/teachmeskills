@@ -1,16 +1,14 @@
 import os
-import re
 import socketserver
 import logging
 from http.server import SimpleHTTPRequestHandler
 
-import src.common.errors as errors
-import src.common.responds as responds
-from src.pages.cv_page import handler_page_cv
-from src.pages.goodbye_page import get_page_goodbye
-from src.pages.hello_page import get_page_hello
-from src.pages.statistics_page import get_page_statistics
-from src.styles.css_style import get_cv_style
+import common.errors as errors
+import common.responds as responds
+from pages.goodbye_page import get_page_goodbye
+from pages.hello_page import get_page_hello
+from pages.statistics_page import get_page_statistics
+from styles.css_style import get_cv_style
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -60,7 +58,7 @@ def do(self, method: str) -> None:
         "hello": get_page_hello,
         "goodbye": get_page_goodbye,
         "statistics": get_page_statistics,
-        "cv": handler_page_cv,
+        #"cv": handler_page_cv,
     }
 
     # get a page via dict.get (usable in do_GET)

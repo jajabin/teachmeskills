@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from src.common import instances
+from common import instances
 
 
 def get_projects(endpoint, page_content, project_id: str = None) -> List:

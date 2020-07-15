@@ -18,14 +18,14 @@ from django.http import HttpResponse
 from django.urls import path
 import logging
 
-from src.common import paths
-from src.pages.cv_page import get_page_cv, get_page_cv_job, get_page_cv_skills, get_page_cv_education, \
+from common import paths
+from pages.cv_page import get_page_cv, get_page_cv_job, get_page_cv_skills, get_page_cv_education, \
     get_page_cv_projects, get_page_projects_editing, get_page_cv_project, get_page_cv_project_editing
-from src.pages.goodbye_page import get_page_goodbye
-from src.pages.hello_page import get_page_hello
-from src.styles.css_style import get_cv_style
-from src.pages.statistics_page import get_page_statistics
-import src.utils.file_utils as fu
+from pages.goodbye_page import get_page_goodbye
+from pages.hello_page import get_page_hello
+from styles.css_style import get_cv_style
+from pages.statistics_page import get_page_statistics
+import utils.file_utils as fu
 
 
 logging.basicConfig(level=logging.DEBUG)

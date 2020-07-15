@@ -4,13 +4,13 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-import src.common.errors as errors
-import src.common.paths as paths
-import src.common.responds as responds
-import src.utils.json_utils as ju
-import src.utils.user_utils as uu
-import src.common.instances as instances
-from src.common.night_mode import set_night_mode
+import common.errors as errors
+import common.paths as paths
+import common.responds as responds
+import utils.json_utils as ju
+import utils.user_utils as uu
+import common.instances as instances
+from common.night_mode import set_night_mode
 
 
 def increment_page_visit(endpoint: str) -> None:
