@@ -5,9 +5,9 @@ from http.server import SimpleHTTPRequestHandler
 
 import common.errors as errors
 import common.responds as responds
-from pages.goodbye_page import get_page_goodbye
-from pages.hello_page import get_page_hello
-from pages.statistics_page import get_page_statistics
+from applications.goodbye.views import get_page_goodbye
+from applications.hello.views import get_page_hello
+from applications.stats.views import get_page_statistics
 from styles.css_style import get_cv_style
 
 logging.basicConfig(level=logging.DEBUG)
@@ -45,8 +45,8 @@ def do(self, method: str) -> None:
     #     "/cv/skills/set_night_mode": get_page_cv_skills,
     #     "/cv/projects": get_page_cv_projects,
     #     "/cv/projects/set_night_mode": get_page_cv_projects,
-    #     "/statistics": get_page_statistics,
-    #     "/statistics/set_night_mode": get_page_statistics,
+    #     "/stats": get_page_statistics,
+    #     "/stats/set_night_mode": get_page_statistics,
     #     "/cv/projects/editing": get_page_projects_editing,
     #     "/cv/projects/editing/add": get_page_projects_editing,
     #     "/cv/projects/editing/edit": get_page_projects_editing,
@@ -57,7 +57,7 @@ def do(self, method: str) -> None:
     switcher = {
         "hello": get_page_hello,
         "goodbye": get_page_goodbye,
-        "statistics": get_page_statistics,
+        "stats": get_page_statistics,
         #"cv": handler_page_cv,
     }
 

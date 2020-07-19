@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from pathlib import Path
 
@@ -41,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "applications.goodbye.apps.GoodbyeConfig",
+    "applications.hello.apps.HelloConfig",
+    "applications.stats.apps.StatsConfig",
+    "applications.cv.apps.CVConfig",
 ]
 
 MIDDLEWARE = [
@@ -58,7 +61,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [REPO_DIR / "pages"],
+        'DIRS': [REPO_DIR / "pages", PROJECT_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

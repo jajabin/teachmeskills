@@ -5,19 +5,15 @@ from pathlib import Path
 from typing import Tuple
 
 from django.http import HttpResponse, HttpResponseRedirect
+
+# Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-import common.errors as errors
-import common.instances as instances
-import common.paths as paths
-import common.responds as responds
-import pages.statistics_page as stats
-import utils.file_utils as fu
-import utils.json_utils as ju
-import utils.project_utils as pu
-import utils.user_utils as uu
+from applications.stats.views import increment_page_visit
+from common import paths as paths, responds as responds, errors as errors, instances as instances
 from common.night_mode import set_night_mode
+from utils import json_utils as ju, project_utils as pu, user_utils as uu, file_utils as fu
 
 
 @csrf_exempt
@@ -86,7 +82,7 @@ def show_page_cv(
     :param project_id: project ID
     :return: nothing
     """
-    stats.increment_page_visit(endpoint)
+    increment_page_visit(endpoint)
 
     resume_content = ju.read_json_file(paths.CV_JSON)
 
@@ -212,4 +208,3 @@ def remove_project(_request, redirect_to, file_content: Path, project_id) -> Htt
     projects_content.pop(project_id)
     ju.write_json_file(file_content, projects_content)
     return HttpResponseRedirect(redirect_to)
-

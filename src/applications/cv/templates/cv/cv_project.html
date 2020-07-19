@@ -14,17 +14,18 @@
 <div id="main">
         {% for project in projects %}
         <form method="post">
-            <h3>{{ project.project_name }}
-                <button formaction="/cv/project/{{ project.project_id }}/delete" name="delete" type="submit">Delete</button>
+            <h3>{{ project.name }}
+                <button formaction="/cv/project/{{ project.id }}/delete" name="delete" type="submit">Delete</button>
             </h3>
-            <p>{{ project.project_date }}</p>
-            <p>{{ project.project_description }}</p>
+            <p>{{ project.date }}</p>
+            <p>{{ project.description }}</p>
         </form>
         {% endfor %}
 </div>
 <div>
+    <b><a href="{% url 'cv:url_project' project.project_id %}editing">Edit Project</a></b>
     {% for project in projects %}
-    <b><a href="/cv/project/{{ project.project_id }}/editing">Edit Project</a></b>
+    <b><a href="/cv/project/{{ project.id }}/editing">Edit Project</a></b>
     {% endfor %}
     <b><a href="/cv/projects/editing">Add Project</a></b>
 </div>

@@ -14,26 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.http import HttpResponse
-from django.urls import path
+from django.urls import path, include
 import logging
 
+from django.views.generic import TemplateView
+
 from common import paths
-from pages.cv_page import get_page_cv, get_page_cv_job, get_page_cv_skills, get_page_cv_education, \
-    get_page_cv_projects, get_page_projects_editing, get_page_cv_project, get_page_cv_project_editing
-from pages.goodbye_page import get_page_goodbye
-from pages.hello_page import get_page_hello
-from styles.css_style import get_cv_style
-from pages.statistics_page import get_page_statistics
-import utils.file_utils as fu
 
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-def show_index(_request):
-    msg = fu.get_file_contents(paths.INDEX_HTML)
-    return HttpResponse(msg)
 
 
 urlpatterns = [
@@ -44,40 +33,18 @@ urlpatterns = [
     # re_path(r"hello/\w+", get_page_hello),
     # path('goodbye/', get_page_goodbye),
     # re_path(r"goodbye/\w+", get_page_goodbye),
-    # path('statistics/', get_page_statistics),
-    # re_path(r"statistics/\w+", get_page_statistics),
+    # path('stats/', get_page_statistics),
+    # re_path(r"stats/\w+", get_page_statistics),
     # path('cv/projects/editing/', handler_page_cv),
     # re_path(r"cv/projects/editing/\w+", handler_page_cv),
     # path('cv/', handler_page_cv),
     # path('cv/<str:module>/', handler_page_cv),
     # path('cv/<str:module>/<str:operation>/', handler_page_cv),
     path('admin/', admin.site.urls),
-    path('cv_style.css', get_cv_style),
-    path('', show_index),
-    path('hello/', get_page_hello),
-    path('hello/save', get_page_hello),
-    path('hello/set_night_mode/', get_page_hello),
-    path('goodbye/', get_page_goodbye),
-    path('goodbye/set_night_mode/', get_page_goodbye),
-    path('statistics/', get_page_statistics),
-    path('statistics/set_night_mode/', get_page_statistics),
-    path('cv/', get_page_cv),
-    path('cv/set_night_mode/', get_page_cv),
-    path('cv/job/', get_page_cv_job),
-    path('cv/job/set_night_mode/', get_page_cv_job),
-    path('cv/skills/', get_page_cv_skills),
-    path('cv/skills/set_night_mode/', get_page_cv_skills),
-    path('cv/education/', get_page_cv_education),
-    path('cv/education/set_night_mode/', get_page_cv_education),
-    path('cv/projects/', get_page_cv_projects),
-    path('cv/projects/set_night_mode/', get_page_cv_projects),
-    path('cv/projects/additing/', get_page_projects_editing),
-    path('cv/projects/additing/set_night_mode/', get_page_projects_editing),
-    path('cv/projects/additing/add', get_page_projects_editing),
-    path('cv/project/', get_page_cv_project),
-    path('cv/project/<str:project_id>/', get_page_cv_project),
-    path('cv/project/<str:project_id>/set_night_mode/', get_page_cv_project),
-    path('cv/project/<str:project_id>/delete', get_page_cv_project),
-    path('cv/project/<str:project_id>/editing', get_page_cv_project_editing),
-    path('cv/project/<str:project_id>/editing/edit', get_page_cv_project_editing),
+    path('css_style.css', TemplateView.as_view(template_name=paths.CSS_STYLE, content_type="text/css")),
+    path('', TemplateView.as_view(template_name=paths.INDEX_HTML)),
+    path('hello/', include("applications.hello.urls")),
+    path('goodbye/', include("applications.goodbye.urls")),
+    path('stats/', include("applications.stats.urls")),
+    path('cv/', include("applications.cv.urls")),
 ]

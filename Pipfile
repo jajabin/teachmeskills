@@ -5,6 +5,8 @@ verify_ssl = true
 
 [dev-packages]
 httpie = "*"
+isort = "*"
+black = "==19.10b0"
 
 [packages]
 django = "*"

@@ -13,14 +13,16 @@
 </div>
 <form method="post">
 <label for="project_name">Название проекта:</label>
-        <input id="project_name" name="project_name"></input>
+    {% for project in projects %}
+        <input id="project_name" name="name" value="{{ project.name }}"></input>
     <br>
         <label for="project_date">Дата:</label>
-        <input id="project_date" name="project_date"></input>
+        <input id="project_date" name="date" value="{{ project.date }}"></input>
     <br>
         <label for="project_description">Описание:</label>
-        <textarea id="project_description" name="project_description"></textarea>
+        <textarea id="project_description" name="description">{{ project.description }}</textarea>
     <br>
-    <button formaction="/cv/projects/additing/add" name="add" type="submit">Add</button>
+    <button formaction="/cv/project/{{ project.id }}/editing/edit" name="edit" type="submit">Edit</button>
+    {% endfor %}
 </form>
 {% endblock %}

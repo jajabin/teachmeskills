@@ -23,6 +23,7 @@ def read_user_session(user_id: str) -> Dict[str, str]:
 
 def parse_received_data(request) -> Dict[str, str]:
     new_data = {}
+    print(request.POST)
     for key, value in request.POST.items():
         if value:
             new_data[key] = value

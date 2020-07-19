@@ -1,16 +1,14 @@
 from datetime import datetime, timedelta
 
 from django.http import HttpResponse
+
+# Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-import common.errors as errors
-import common.paths as paths
-import common.responds as responds
-import utils.json_utils as ju
-import utils.user_utils as uu
-import common.instances as instances
+from common import paths as paths, responds as responds, instances as instances, errors as errors
 from common.night_mode import set_night_mode
+from utils import json_utils as ju, user_utils as uu
 
 
 def increment_page_visit(endpoint: str) -> None:
@@ -63,7 +61,7 @@ def show_page_statistics(request) -> HttpResponse:
     user_id = uu.get_user_id(request)
     user_session = uu.read_user_session(user_id)
 
-    return responds.respond_200(request, paths.STATISTICS_HTML, {"action_night_mode": "/statistics/set_night_mode/",
+    return responds.respond_200(request, paths.STATISTICS_HTML, {"action_night_mode": "/stats/set_night_mode/",
                                                                  "stats": stats,
                                                                  **user_session[user_id]})
 
@@ -71,7 +69,7 @@ def show_page_statistics(request) -> HttpResponse:
 def save_page_statistics(request) -> HttpResponse:
     redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
     switcher = {
-        "/statistics/set_night_mode/": set_night_mode,
+        "/stats/set_night_mode/": set_night_mode,
     }
     if request.path in switcher:
         return switcher[request.path](request, redirect_to)

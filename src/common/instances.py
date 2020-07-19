@@ -12,10 +12,10 @@ YEAR_key = "year"
 BCKG_COLOR = "background_color"
 TXT_COLOR = "text_color"
 
-PROJECT_ID_key = "project_id"
-PROJECT_NAME_key = "project_name"
-PROJECT_DATE_key = "project_date"
-PROJECT_DESCRIPTION_key = "project_description"
+PROJECT_ID_key = "id"
+PROJECT_NAME_key = "name"
+PROJECT_DATE_key = "date"
+PROJECT_DESCRIPTION_key = "description"
 
 NEW_USER = {NAME_key: "Dude", AGE_key: "", YEAR_key: "", BCKG_COLOR: LIGHT_COLOR, TXT_COLOR: DARK_COLOR}
 NEW_PROJECT = {PROJECT_NAME_key: "", PROJECT_DATE_key: "", PROJECT_DESCRIPTION_key: ""}
@@ -36,8 +36,8 @@ ENDPOINT_REDIRECTS = {
     "/cv/skills/set_night_mode/": "/cv/skills",
     "/cv/projects": "/cv/projects",
     "/cv/projects/set_night_mode/": "/cv/projects",
-    "/statistics": "/statistics",
-    "/statistics/set_night_mode/": "/statistics",
+    "/stats": "/stats",
+    "/stats/set_night_mode/": "/stats",
     "/cv/projects/additing": "/cv/projects/additing",
     "/cv/projects/additing/add": "/cv/projects",
     "/cv/projects/additing/set_night_mode/": "/cv/projects/additing"
