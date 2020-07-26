@@ -9,11 +9,10 @@
     <p class="center">{{ about }}</p>
 </div>
 <div>
-    {{ cv_links|safe }}
+    {% include "cv/cv_links.html" %}
 </div>
-<form method="post">
+<form method="post">{% csrf_token %}
 <label for="project_name">Название проекта:</label>
-    {% for project in projects %}
         <input id="project_name" name="name" value="{{ project.name }}"></input>
     <br>
         <label for="project_date">Дата:</label>
@@ -22,7 +21,6 @@
         <label for="project_description">Описание:</label>
         <textarea id="project_description" name="description">{{ project.description }}</textarea>
     <br>
-    <button formaction="/cv/project/{{ project.id }}/editing/edit" name="edit" type="submit">Edit</button>
-    {% endfor %}
+    <button formaction="{% url 'cv:single_project' project.id %}editing/edit" name="edit" type="submit">Edit</button>
 </form>
 {% endblock %}

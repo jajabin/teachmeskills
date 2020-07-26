@@ -2,67 +2,54 @@ import logging
 import uuid
 from datetime import datetime
 
-from django.http import HttpResponse
+from django import forms
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.generic import FormView
+from django.views.generic import View
 
 from applications.stats.views import increment_page_visit
-from common import responds as responds, paths as paths, instances as instances, errors as errors
-from common.night_mode import set_night_mode
-from utils import user_utils as uu, json_utils as ju
+from project.utils.night_mode import set_night_mode, get_theme
+from project.utils import user_utils as uu, paths as paths, instances as instances
 
 
-@require_http_methods(["GET", "POST"])
-@csrf_exempt    # what is it ????
-def get_page_hello(request) -> HttpResponse:
-    logging.debug(f"request = {request}")
-    logging.debug(f"request.POST = {request.POST.get}")
-    logging.debug(f"request.body = {request.body}")
-
-    switcher = {
-        "GET": show_page_hello,
-        "POST": save_user_data,
-    }
-
-    return switcher[request.method](request)
+class HelloForm(forms.Form):
+    name = forms.CharField(max_length=200, required=True)
+    age = forms.IntegerField(required=False)
 
 
-def show_page_hello(request) -> HttpResponse:
-    increment_page_visit(request.path)
-    user_id = uu.get_user_id(request)
-    user_session = uu.read_user_session(user_id)
+class HelloView(FormView):
 
-    return responds.respond_200(request, paths.HELLO_HTML, {"action_night_mode": "/hello/set_night_mode/",
-                                                            **user_session[user_id]})
+    template_name = paths.HELLO_HTML
+    form_class = HelloForm
+
+    def get_success_url(self):
+        return instances.ENDPOINT_REDIRECTS[self.request.path]
+
+    def get_context_data(self, **kwargs):
+        increment_page_visit(self.request.path)
+
+        context = super().get_context_data(**kwargs)
+        name = self.request.session.get(instances.NAME_key)
+        age = self.request.session.get(instances.AGE_key)
+        year = None
+        if age is not None:
+            year = datetime.now().year - int(age)
+
+        user_session = {instances.NAME_key: name,
+                        instances.YEAR_key: year}
+        theme = get_theme(self.request)
+        context.update({**user_session, **theme})
+        return context
+
+    #@csrf_exempt
+    def form_valid(self, form):
+        self.request.session[instances.NAME_key] = form.cleaned_data[instances.NAME_key]
+        self.request.session[instances.YEAR_key] = form.cleaned_data[instances.YEAR_key]
+        uu.write_user_session(form.cleaned_data, self.request.session.session_key)
+        return super().form_valid(form)
 
 
-def save_user_data(request) -> HttpResponse:
-    redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
-    switcher = {
-        "/hello/save": write_user_data,
-        "/hello/set_night_mode/": set_night_mode,
-    }
-    if request.path in switcher:
-        return switcher[request.path](request, redirect_to)
-    else:
-        raise errors.PageNotFoundError
-
-
-def write_user_data(request, redirect_to) -> HttpResponse:
-    user_data = ju.read_json_file(paths.USER_SESSIONS)
-    new_user = instances.NEW_USER.copy()
-    new_user.update(uu.parse_received_data(request))
-
-    if new_user[instances.AGE_key]:
-        today = datetime.today().year
-        age = int(new_user[instances.AGE_key])
-        new_user[instances.YEAR_key] = str(today - age)
-
-    user_id = str(uuid.uuid1())
-    if user_id not in user_data:
-        user_data[user_id] = {}
-
-    user_data[user_id].update(new_user)
-    ju.update_json_file(user_data, paths.USER_SESSIONS)
-
-    return responds.respond_302(redirect_to, user_id)
+class NightModeView(View):
+    @csrf_exempt
+    def post(self, request):
+        return set_night_mode(request, instances.ENDPOINT_REDIRECTS[request.path])

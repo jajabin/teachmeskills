@@ -3,17 +3,16 @@
 {% block title %}Hello{% endblock %}
 
 {% block content %}
-<form method="post">
+
     <p>Hey {{ name }}!</p>
+    {% if year %}
     <p>You were born in {{ year }}.</p>
-    <p>
-        <label for="name">Name:</label>
-        <input id="name" name="name"></input>
-    </p>
-    <p>
-        <label for="age">Age:</label>
-        <input id="age" name="age"></input>
-    </p>
-    <button formaction="{% url 'hello:url_name' %}save" name="send" type="submit">Send</button>
+    {% else %}
+    <p>Year is not known.</p>
+    {% endif %}
+
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button formaction="{% url 'hello:root' %}save" name="send" type="submit">Send</button>
 </form>
 {% endblock %}

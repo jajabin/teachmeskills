@@ -3,8 +3,8 @@ import socketserver
 import logging
 from http.server import SimpleHTTPRequestHandler
 
-import common.errors as errors
-import common.responds as responds
+import project.utils.errors as errors
+import project.utils.responds as responds
 from applications.goodbye.views import get_page_goodbye
 from applications.hello.views import get_page_hello
 from applications.stats.views import get_page_statistics

@@ -1,5 +1,5 @@
-import common.paths as paths
-import common.responds as responds
+import project.utils.paths as paths
+import project.utils.responds as responds
 
 from django.http import HttpResponse
 

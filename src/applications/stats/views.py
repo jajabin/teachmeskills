@@ -2,13 +2,12 @@ from datetime import datetime, timedelta
 
 from django.http import HttpResponse
 
-# Create your views here.
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.generic import View, TemplateView
 
-from common import paths as paths, responds as responds, instances as instances, errors as errors
-from common.night_mode import set_night_mode
-from utils import json_utils as ju, user_utils as uu
+from project.utils.night_mode import set_night_mode, get_theme
+from project.utils import user_utils as uu, json_utils as ju, paths as paths, instances as instances
 
 
 def increment_page_visit(endpoint: str) -> None:
@@ -34,44 +33,31 @@ def calculate_stats(page_statistics, start_date, count_days) -> int:
     return visit_counter
 
 
-@require_http_methods(["GET", "POST"])
-@csrf_exempt
-def get_page_statistics(request) -> HttpResponse:
-    switcher = {
-        "GET": show_page_statistics,
-        "POST": save_page_statistics,
-    }
+class StatsView(TemplateView):
+    template_name = paths.STATISTICS_HTML
 
-    return switcher[request.method](request)
+    def get(self, request) -> HttpResponse:
+        statistics_content = ju.read_json_file(paths.VISIT_COUNTERS)
 
+        today = datetime.today().date()
+        stats = []
+        for page in statistics_content:
+            stat = {"page": page,
+                    "today": calculate_stats(statistics_content[page], today, 0),
+                    "yesterday": calculate_stats(statistics_content[page], today - timedelta(days=1), 0),
+                    "week": calculate_stats(statistics_content[page], today, 7),
+                    "month": calculate_stats(statistics_content[page], today, 30)}
+            stats.append(stat)
 
-def show_page_statistics(request) -> HttpResponse:
-    statistics_content = ju.read_json_file(paths.VISIT_COUNTERS)
+        user_id = uu.get_user_id(request)
+        user_session = uu.read_user_session(user_id)
+        theme = get_theme(self.request)
+        context = {"stats": stats, **theme}
 
-    today = datetime.today().date()
-    stats = []
-    for page in statistics_content:
-        stat = {"page": page,
-                "today": calculate_stats(statistics_content[page], today, 0),
-                "yesterday": calculate_stats(statistics_content[page], today - timedelta(days=1), 0),
-                "week": calculate_stats(statistics_content[page], today, 7),
-                "month": calculate_stats(statistics_content[page], today, 30)}
-        stats.append(stat)
-
-    user_id = uu.get_user_id(request)
-    user_session = uu.read_user_session(user_id)
-
-    return responds.respond_200(request, paths.STATISTICS_HTML, {"action_night_mode": "/stats/set_night_mode/",
-                                                                 "stats": stats,
-                                                                 **user_session[user_id]})
+        return render(request, paths.STATISTICS_HTML, context)
 
 
-def save_page_statistics(request) -> HttpResponse:
-    redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
-    switcher = {
-        "/stats/set_night_mode/": set_night_mode,
-    }
-    if request.path in switcher:
-        return switcher[request.path](request, redirect_to)
-    else:
-        raise errors.PageNotFoundError
+class NightModeView(View):
+    @csrf_exempt
+    def post(self, request):
+        return set_night_mode(request, instances.ENDPOINT_REDIRECTS[request.path])

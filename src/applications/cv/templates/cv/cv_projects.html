@@ -9,16 +9,16 @@
     <p class="center">{{ about }}</p>
 </div>
 <div>
-    {{ cv_links|safe }}
+    {% include "cv/cv_links.html" %}
 </div>
 <div id="main">
         {% for project in projects %}
-            <h3><a href="/cv/project/{{ project.id }}">{{ project.name }}</a></h3>
+            <h3><a href="{% url 'cv:single_project' project.id %}">{{ project.name }}</a></h3>
             <p>{{ project.date }}</p>
             <p>{{ project.description }}</p>
         {% endfor %}
 </div>
 <div>
-    <b><a href="/cv/projects/additing">Add Project</a></b>
+    <b><a href="{% url 'cv:projects' %}additing">Add Project</a></b>
 </div>
 {% endblock %}

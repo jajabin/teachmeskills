@@ -12,6 +12,8 @@ YEAR_key = "year"
 BCKG_COLOR = "background_color"
 TXT_COLOR = "text_color"
 
+DEFAULT_THEMA = {BCKG_COLOR: LIGHT_COLOR, TXT_COLOR: DARK_COLOR}
+
 PROJECT_ID_key = "id"
 PROJECT_NAME_key = "name"
 PROJECT_DATE_key = "date"

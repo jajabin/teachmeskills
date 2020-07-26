@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
-from common import instances
+from project.utils import instances
 
 
 def respond_200(request, file, context, content_type="text/html") -> HttpResponse:

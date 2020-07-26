@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "applications.goodbye.apps.GoodbyeConfig",
+    'applications.goodbye.apps.GoodbyeConfig',
     "applications.hello.apps.HelloConfig",
     "applications.stats.apps.StatsConfig",
     "applications.cv.apps.CVConfig",

@@ -9,6 +9,6 @@
     <p class="center">{{ about }}</p>
 </div>
 <div>
-    {{ cv_links|safe }}
+        {% include "cv/cv_links.html" %}
 </div>
 {% endblock %}

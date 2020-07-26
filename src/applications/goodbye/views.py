@@ -1,61 +1,45 @@
 from datetime import datetime
 
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView, View
 
 from applications.stats.views import increment_page_visit
-from common import responds as responds, paths as paths, instances as instances, errors as errors
-from common.night_mode import set_night_mode
-from utils import user_utils as uu
+from project.utils.night_mode import set_night_mode, get_theme
+from project.utils import paths as paths, instances as instances
 
 
-@require_http_methods(["GET", "POST"])
-@csrf_exempt
-def get_page_goodbye(request) -> HttpResponse:
-    switcher = {
-        "GET": show_page_goodbye,
-        "POST": save_page_goodbye,
-    }
+class GoodbyeView(TemplateView):
+    template_name = paths.GOODBYE_HTML
 
-    return switcher[request.method](request)
+    def get(self, request) -> HttpResponse:
+        increment_page_visit(request.path)
 
+        today = datetime.today()
+        phrase = self.say_bye(today.hour)
 
-def show_page_goodbye(request) -> HttpResponse:
-    increment_page_visit(request.path)
-    today = datetime.today()
-    phrase = say_bye(today.hour)
+        theme = get_theme(self.request)
+        context = {"date": today, "phrase": phrase, **theme}
 
-    user_id = uu.get_user_id(request)
-    user_session = uu.read_user_session(user_id)
+        return render(self.request, paths.GOODBYE_HTML, context)
 
-    return responds.respond_200(request, paths.GOODBYE_HTML, {"action_night_mode": "/goodbye/set_night_mode/",
-                                                              "date": today,
-                                                              "phrase": phrase,
-                                                              **user_session[user_id]})
-
-
-def save_page_goodbye(request) -> HttpResponse:
-    redirect_to = instances.ENDPOINT_REDIRECTS[request.path]
-    switcher = {
-      "/goodbye/set_night_mode/": set_night_mode,
-    }
-    if request.path in switcher:
-        return switcher[request.path](request, redirect_to)
-    else:
-        raise errors.PageNotFoundError
+    def say_bye(self, hour) -> str:
+        if hour < 0:
+            return "Invalid value."
+        elif hour < 6 or hour == 23:
+            return "Goodnight!"
+        elif hour < 12:
+            return "Good Morning!"
+        elif hour < 18:
+            return "Have a nice day!"
+        elif hour < 23:
+            return "Good Evening!"
+        else:
+            return "Invalid value."
 
 
-def say_bye(hour) -> str:
-    if hour < 0:
-        return "Invalid value."
-    elif hour < 6 or hour == 23:
-        return "Goodnight!"
-    elif hour < 12:
-        return "Good Morning!"
-    elif hour < 18:
-        return "Have a nice day!"
-    elif hour < 23:
-        return "Good Evening!"
-    else:
-        return "Invalid value."
+class NightModeView(View):
+    @csrf_exempt
+    def post(self, request):
+        return set_night_mode(request, instances.ENDPOINT_REDIRECTS[request.path])

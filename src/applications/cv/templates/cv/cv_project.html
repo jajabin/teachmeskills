@@ -9,24 +9,19 @@
     <p class="center">{{ about }}</p>
 </div>
 <div>
-    {{ cv_links|safe }}
+    {% include "cv/cv_links.html" %}
 </div>
 <div id="main">
-        {% for project in projects %}
-        <form method="post">
+        <form method="post">{% csrf_token %}
             <h3>{{ project.name }}
-                <button formaction="/cv/project/{{ project.id }}/delete" name="delete" type="submit">Delete</button>
+                <button formaction="{% url 'cv:single_project' project.id %}delete" name="delete" type="submit">Delete</button>
             </h3>
             <p>{{ project.date }}</p>
             <p>{{ project.description }}</p>
         </form>
-        {% endfor %}
 </div>
 <div>
-    <b><a href="{% url 'cv:url_project' project.project_id %}editing">Edit Project</a></b>
-    {% for project in projects %}
-    <b><a href="/cv/project/{{ project.id }}/editing">Edit Project</a></b>
-    {% endfor %}
-    <b><a href="/cv/projects/editing">Add Project</a></b>
+    <b><a href="{% url 'cv:single_project' project.id %}editing">Edit Project</a></b>
+    <b><a href="{% url 'cv:projects' %}editing">Add Project</a></b>
 </div>
 {% endblock %}

@@ -19,8 +19,7 @@ import logging
 
 from django.views.generic import TemplateView
 
-from common import paths
-
+from project.utils import paths
 
 logging.basicConfig(level=logging.DEBUG)
 

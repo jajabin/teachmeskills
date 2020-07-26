@@ -1,10 +1,11 @@
 import logging
 import uuid
+from datetime import datetime
 from typing import Dict
 
-import common.instances as instances
-import common.paths as paths
-import utils.json_utils as ju
+import project.utils.instances as instances
+import project.utils.paths as paths
+import project.utils.json_utils as ju
 
 
 def get_user_id(request) -> str:
@@ -21,9 +22,23 @@ def read_user_session(user_id: str) -> Dict[str, str]:
     return current_user
 
 
+def write_user_session(user_sessions, user_id):
+    user_data = ju.read_json_file(paths.USER_SESSIONS)
+    new_user = instances.NEW_USER.copy()
+    new_user.update(user_sessions)
+
+    if new_user[instances.AGE_key]:
+        today = datetime.today().year
+        age = int(new_user[instances.AGE_key])
+        new_user[instances.YEAR_key] = str(today - age)
+
+    user_data[user_id] = {}
+    user_data[user_id].update(new_user)
+    ju.update_json_file(user_data, paths.USER_SESSIONS)
+
+
 def parse_received_data(request) -> Dict[str, str]:
     new_data = {}
-    print(request.POST)
     for key, value in request.POST.items():
         if value:
             new_data[key] = value
