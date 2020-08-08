@@ -1,5 +1,3 @@
-import logging
-import uuid
 from datetime import datetime
 
 from django import forms
@@ -7,9 +5,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView
 from django.views.generic import View
 
-from applications.stats.views import increment_page_visit
+from applications.hello.models import HelloModel
 from project.utils.night_mode import set_night_mode, get_theme
 from project.utils import user_utils as uu, paths as paths, instances as instances
+from project.utils.stats_utils import increment_visit
+from project.utils.user_utils import create_user
 
 
 class HelloForm(forms.Form):
@@ -17,6 +17,7 @@ class HelloForm(forms.Form):
     age = forms.IntegerField(required=False)
 
 
+@increment_visit
 class HelloView(FormView):
 
     template_name = paths.HELLO_HTML
@@ -26,8 +27,6 @@ class HelloView(FormView):
         return instances.ENDPOINT_REDIRECTS[self.request.path]
 
     def get_context_data(self, **kwargs):
-        increment_page_visit(self.request.path)
-
         context = super().get_context_data(**kwargs)
         name = self.request.session.get(instances.NAME_key)
         age = self.request.session.get(instances.AGE_key)
@@ -41,11 +40,17 @@ class HelloView(FormView):
         context.update({**user_session, **theme})
         return context
 
-    #@csrf_exempt
+    # @csrf_exempt
     def form_valid(self, form):
-        self.request.session[instances.NAME_key] = form.cleaned_data[instances.NAME_key]
-        self.request.session[instances.YEAR_key] = form.cleaned_data[instances.YEAR_key]
-        uu.write_user_session(form.cleaned_data, self.request.session.session_key)
+        name = form.cleaned_data[instances.NAME_key]
+        age = form.cleaned_data[instances.AGE_key]
+
+        create_user(name, age)
+
+        self.request.session[instances.NAME_key] = name
+        self.request.session[instances.AGE_key] = age
+
+        # uu.write_user_session(form.cleaned_data, self.request.session.session_key)
         return super().form_valid(form)
 
 

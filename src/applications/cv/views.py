@@ -7,15 +7,16 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View, TemplateView, FormView
 
-from applications.stats.views import increment_page_visit
 from project.utils.night_mode import set_night_mode, get_theme
 from project.utils import project_utils as pu, user_utils as uu, file_utils as fu, json_utils as ju, paths as paths, \
     responds as responds, errors as errors, instances as instances
+from project.utils.stats_utils import increment_page_visit, increment_visit
 
 
+@increment_visit
 class CVView(TemplateView):
     def get(self, request) -> HttpResponse:
-        increment_page_visit(request.path)
+        #increment_page_visit(request.path)
 
         page_content = ju.read_json_file(paths.CV_JSON)
         theme = get_theme(self.request)
@@ -24,9 +25,10 @@ class CVView(TemplateView):
         return render(self.request, paths.CV_HTML, context)
 
 
+@increment_visit
 class JobView(TemplateView):
     def get(self, request) -> HttpResponse:
-        increment_page_visit(request.path)
+        #increment_page_visit(request.path)
 
         page_content = ju.read_json_file(paths.CV_JOB_JSON)
         resume_content = ju.read_json_file(paths.CV_JSON)
@@ -36,9 +38,10 @@ class JobView(TemplateView):
         return render(self.request, paths.CV_JOB_HTML, context)
 
 
+@increment_visit
 class EducationView(TemplateView):
     def get(self, request) -> HttpResponse:
-        increment_page_visit(request.path)
+        #increment_page_visit(request.path)
 
         page_content = ju.read_json_file(paths.CV_EDUCATION_JSON)
         resume_content = ju.read_json_file(paths.CV_JSON)
@@ -48,9 +51,10 @@ class EducationView(TemplateView):
         return render(self.request, paths.CV_EDUCATION_HTML, context)
 
 
+@increment_visit
 class SkillsView(TemplateView):
     def get(self, request) -> HttpResponse:
-        increment_page_visit(request.path)
+        #increment_page_visit(request.path)
 
         page_content = ju.read_json_file(paths.CV_SKILLS_JSON)
         resume_content = ju.read_json_file(paths.CV_JSON)
@@ -60,11 +64,12 @@ class SkillsView(TemplateView):
         return render(self.request, paths.CV_SKILLS_HTML, context)
 
 
+@increment_visit
 class ProjectsView(FormView):
     template_name = paths.CV_PROJECTS_HTML
 
     def get_context_data(self, **kwargs):
-        increment_page_visit(self.request.path)
+        #increment_page_visit(self.request.path)
 
         page_content = ju.read_json_file(paths.CV_PROJECTS_JSON)
         projects = pu.get_projects(page_content)
@@ -85,6 +90,7 @@ class ProjectForm(forms.Form):
     description = forms.CharField(max_length=500, required=False)
 
 
+@increment_visit
 class AddProjectView(FormView):
     template_name = paths.CV_PROJECTS_ADDITING_HTML
     form_class = ProjectForm
@@ -93,7 +99,7 @@ class AddProjectView(FormView):
         return "/cv/projects"
 
     def get_context_data(self, **kwargs):
-        increment_page_visit(self.request.path)
+        #increment_page_visit(self.request.path)
 
         resume_content = ju.read_json_file(paths.CV_JSON)
         theme = get_theme(self.request)
@@ -109,10 +115,11 @@ class AddProjectView(FormView):
         return super().form_valid(form)
 
 
+@increment_visit
 class SingleProjectView(TemplateView):
 
     def get(self, request, project_id):
-        increment_page_visit(self.request.path)
+        #increment_page_visit(self.request.path)
 
         page_content = ju.read_json_file(paths.CV_PROJECTS_JSON)
         project = pu.build_project(page_content, project_id)
@@ -132,6 +139,7 @@ class SingleProjectView(TemplateView):
         return HttpResponseRedirect("/cv/projects/")
 
 
+@increment_visit
 class EditProjectView(FormView):
     template_name = paths.CV_PROJECT_EDITING_HTML
     form_class = ProjectForm
@@ -140,7 +148,7 @@ class EditProjectView(FormView):
         return "/cv/project/" + self.kwargs["project_id"]
 
     def get_context_data(self, **kwargs):
-        increment_page_visit(self.request.path)
+        #increment_page_visit(self.request.path)
 
         page_content = ju.read_json_file(paths.CV_PROJECTS_JSON)
         project = pu.build_project(page_content, self.kwargs["project_id"])

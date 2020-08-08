@@ -6,6 +6,18 @@ from typing import Dict
 import project.utils.instances as instances
 import project.utils.paths as paths
 import project.utils.json_utils as ju
+from applications.hello.models import HelloModel
+
+
+def create_user(name, age):
+    user = HelloModel()
+    user.name = name
+    user.age = age
+    user.year = datetime.now().year - int(age) if age else None
+    user.background_color = instances.LIGHT_COLOR
+    user.text_color = instances.DARK_COLOR
+    user.save()
+    return
 
 
 def get_user_id(request) -> str:
