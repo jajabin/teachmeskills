@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}CV - Projects Editing{% endblock %}
+
+{% block content %}
+<div>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
+</div>
+<div>
+    {% include "cv/cv_links.html" %}
+</div>
+<form method="post">{% csrf_token %}
+<label for="project_name">Название проекта:</label>
+        <input id="project_name" name="name" value="{{ project.name }}"></input>
+    <br>
+        <label for="project_date">Дата:</label>
+        <input id="project_date" name="date" value="{{ project.date }}"></input>
+    <br>
+        <label for="project_description">Описание:</label>
+        <textarea id="project_description" name="description">{{ project.description }}</textarea>
+    <br>
+    <button formaction="{% url 'cv:single_project' project.id %}editing/edit" name="edit" type="submit">Edit</button>
+</form>
+{% endblock %}

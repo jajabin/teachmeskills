@@ -1,8 +1,8 @@
-import src.common.paths as paths
-import src.common.responds as responds
-import src.utils.file_utils as fu
+import project.utils.paths as paths
+import project.utils.responds as responds
+
+from django.http import HttpResponse
 
 
-def get_cv_style(self, _method) -> None:
-    msg = fu.get_file_contents(paths.CV_STYLE)
-    responds.respond_200(self, msg, "text/css")
+def get_cv_style(request) -> HttpResponse:
+    return responds.respond_200(request, paths.CSS_STYLE, None, 'text/css')

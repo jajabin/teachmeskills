@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}CV - Education{% endblock %}
+
+{% block content %}
+<div>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
+</div>
+<div>
+    {% include "cv/cv_links.html" %}
+</div>
+<div id="main">
+        <h3>{{ head_education }}</h3>
+        <b>{{ education }}</b>
+        <p>{{ faculty }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}CV - Project{% endblock %}
+
+{% block content %}
+<div>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
+</div>
+<div>
+    {% include "cv/cv_links.html" %}
+</div>
+<div id="main">
+        <form method="post">{% csrf_token %}
+            <h3>{{ project.name }}
+                <button formaction="{% url 'cv:single_project' project.id %}delete" name="delete" type="submit">Delete</button>
+            </h3>
+            <p>{{ project.date }}</p>
+            <p>{{ project.description }}</p>
+        </form>
+</div>
+<div>
+    <b><a href="{% url 'cv:single_project' project.id %}editing">Edit Project</a></b>
+    <b><a href="{% url 'cv:projects' %}additing">Add Project</a></b>
+</div>
+{% endblock %}

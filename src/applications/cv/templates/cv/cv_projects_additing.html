@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}CV - Projects Editing{% endblock %}
+
+{% block content %}
+<div>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
+</div>
+<div>
+    {% include "cv/cv_links.html" %}
+</div>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button formaction="{% url 'cv:projects' %}additing/add" name="add" type="submit">Add</button>
+</form>
+{% endblock %}

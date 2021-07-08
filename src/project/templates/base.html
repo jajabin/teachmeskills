@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="/css_style.css" rel="stylesheet">
+</head>
+<body style="background-color:{{ background_color }};color:{{ text_color }};">
+<form method="post">{% csrf_token %}
+    <button class="slider" formaction="set_night_mode/" name="night_mode" type="submit">Night mode</button>
+</form>
+{% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}CV{% endblock %}
+
+{% block content %}
+<div>
+    <h1>{{ cv_name }}</h1>
+    <h2>{{ position }}</h2>
+    <p class="center">{{ about }}</p>
+</div>
+<div>
+    {% include "cv/cv_links.html" %}
+</div>
+<div id="main">
+        <h3>{{head_skills}}</h3>
+        <ul>
+            <li>{{skills}}
+        </ul>
+        <b>{{head_additional}}</b>
+        <p>{{others}}</p>
+</div>
+{% endblock %}

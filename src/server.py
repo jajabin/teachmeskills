@@ -1,16 +1,14 @@
 import os
-import re
 import socketserver
 import logging
 from http.server import SimpleHTTPRequestHandler
 
-import src.common.errors as errors
-import src.common.responds as responds
-from src.pages.cv_page import handler_page_cv
-from src.pages.goodbye_page import get_page_goodbye
-from src.pages.hello_page import get_page_hello
-from src.pages.statistics_page import get_page_statistics
-from src.styles.css_style import get_cv_style
+import project.utils.errors as errors
+import project.utils.responds as responds
+from applications.goodbye.views import get_page_goodbye
+from applications.hello.views import get_page_hello
+from applications.stats.views import get_page_statistics
+from styles.css_style import get_cv_style
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,8 +45,8 @@ def do(self, method: str) -> None:
     #     "/cv/skills/set_night_mode": get_page_cv_skills,
     #     "/cv/projects": get_page_cv_projects,
     #     "/cv/projects/set_night_mode": get_page_cv_projects,
-    #     "/statistics": get_page_statistics,
-    #     "/statistics/set_night_mode": get_page_statistics,
+    #     "/stats": get_page_statistics,
+    #     "/stats/set_night_mode": get_page_statistics,
     #     "/cv/projects/editing": get_page_projects_editing,
     #     "/cv/projects/editing/add": get_page_projects_editing,
     #     "/cv/projects/editing/edit": get_page_projects_editing,
@@ -59,8 +57,8 @@ def do(self, method: str) -> None:
     switcher = {
         "hello": get_page_hello,
         "goodbye": get_page_goodbye,
-        "statistics": get_page_statistics,
-        "cv": handler_page_cv,
+        "stats": get_page_statistics,
+        #"cv": handler_page_cv,
     }
 
     # get a page via dict.get (usable in do_GET)
